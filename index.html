@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mines Co-op Firebase</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(circle at top, #4c1d95, #020617 60%);
+  }
+
+  .glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  }
+
+  .grid {
+    display:grid;
+    grid-template-columns:repeat(10,42px);
+    gap:6px;
+  }
+
+  .cell {
+    width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:800;
+    user-select:none;
+    transition:
+      transform .12s ease,
+      background .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .cell:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 12px rgba(168,85,247,.35);
+  }
+
+  .cell:active {
+    transform: scale(.95);
+  }
+
+  .revealed {
+    background:#020617 !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+
+  .bomb {
+    filter: drop-shadow(0 0 8px #fb7185);
+  }
+
+  .flag {
+    filter: drop-shadow(0 0 6px #a855f7);
+    animation: pulse .9s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.15); }
+  }
+</style>
+</head>
+
+<body class="text-slate-100 min-h-screen flex items-center justify-center p-6">
+
+<!-- LOBBY -->
+<div id="lobby" class="glass p-10 rounded-3xl space-y-6 text-center w-full max-w-md">
+  <h1 class="text-4xl font-black tracking-tight bg-gradient-to-r from-purple-400 to-fuchsia-500 bg-clip-text text-transparent">
+    CO-OP MINES
+  </h1>
+
+  <p id="conn" class="text-xs text-slate-400 tracking-wide">
+    Conectando ao Firebase…
+  </p>
+
+  <button id="btnCreator" disabled
+    class="w-full bg-purple-700/70 hover:bg-purple-600 transition p-3 rounded-xl font-bold disabled:opacity-40">
+    CRIADOR
+  </button>
+
+  <button id="btnChallenger" disabled
+    class="w-full bg-fuchsia-700/70 hover:bg-fuchsia-600 transition p-3 rounded-xl font-bold disabled:opacity-40">
+    DESAFIANTE
+  </button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="hidden space-y-4 w-full max-w-3xl glass p-6 rounded-3xl">
+  <div class="flex justify-between items-center">
+    <h2 id="role" class="font-black tracking-wide text-purple-300"></h2>
+    <button id="reset"
+      class="bg-rose-600/80 hover:bg-rose-500 transition px-4 py-1 rounded-lg text-sm">
+      RESET
+    </button>
+  </div>
+
+  <p id="status" class="italic text-slate-400"></p>
+  <div id="grid" class="grid bg-black/40 p-4 rounded-2xl"></div>
+</div>
+
+<!-- =================== SEU JS ORIGINAL =================== -->
+<script type="module">
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAerJxRg8JF2W2DLLCLrI7d9pIFNprMQl0",
+  authDomain: "chatcat-73364.firebaseapp.com",
+  projectId: "chatcat-73364",
+  storageBucket: "chatcat-73364.firebasestorage.app",
+  messagingSenderId: "645503800079",
+  appId: "1:645503800079:web:96d66fe844f9ecafe0e47a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ================= STATE ================= */
+let user = null;
+let myRole = null;
+let game = null;
+
+const gameRef = doc(db, "games", "coop-mines");
+
+/* ================= UI ================= */
+const lobby = document.getElementById("lobby");
+const gameUI = document.getElementById("game");
+const grid = document.getElementById("grid");
+const statusTxt = document.getElementById("status");
+const roleTxt = document.getElementById("role");
+const connTxt = document.getElementById("conn");
+
+const btnCreator = document.getElementById("btnCreator");
+const btnChallenger = document.getElementById("btnChallenger");
+
+btnCreator.onclick = () => pickRole("creator");
+btnChallenger.onclick = () => pickRole("challenger");
+document.getElementById("reset").onclick = resetGame;
+
+/* ================= AUTH ================= */
+signInAnonymously(auth);
+
+onAuthStateChanged(auth, u => {
+  if (u) {
+    user = u;
+    connTxt.innerText = "Conectado ✔";
+    startSync();
+  }
+});
+
+/* ================= FIRESTORE SYNC ================= */
+function startSync() {
+  onSnapshot(gameRef, async snap => {
+    if (!snap.exists()) {
+      await setDoc(gameRef, {
+        creator: null,
+        challenger: null,
+        status: "WAITING",
+        bombs: [],
+        revealed: [],
+        flags: []
+      });
+      return;
+    }
+
+    game = snap.data();
+
+    if (!myRole && user) {
+      if (game.creator === user.uid) myRole = "creator";
+      if (game.challenger === user.uid) myRole = "challenger";
+    }
+
+    btnCreator.disabled = !!game.creator;
+    btnChallenger.disabled = !!game.challenger;
+
+    render();
+  });
+}
+
+/* ================= GAME LOGIC ================= */
+function adj(i) {
+  let r = Math.floor(i / 10), c = i % 10, n = 0;
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      let nr = r + dr, nc = c + dc;
+      if (
+        nr >= 0 && nr < 10 &&
+        nc >= 0 && nc < 10 &&
+        game.bombs.includes(nr * 10 + nc)
+      ) n++;
+    }
+  return n;
+}
+
+function floodFill(start) {
+  const stack = [start];
+  const visited = new Set(game.revealed);
+
+  while (stack.length) {
+    const i = stack.pop();
+    if (visited.has(i)) continue;
+    visited.add(i);
+
+    if (adj(i) === 0) {
+      let r = Math.floor(i / 10), c = i % 10;
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          let nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) {
+            const ni = nr * 10 + nc;
+            if (!visited.has(ni) && !game.bombs.includes(ni)) {
+              stack.push(ni);
+            }
+          }
+        }
+    }
+  }
+  return Array.from(visited);
+}
+
+async function pickRole(role) {
+  if (!game || !user) return;
+  if (game[role]) return;
+
+  myRole = role;
+  await updateDoc(gameRef, { [role]: user.uid, status: "SETUP" });
+}
+
+function render() {
+  if (!game || !myRole) return;
+
+  if (game.creator && game.challenger) {
+    lobby.classList.add("hidden");
+    gameUI.classList.remove("hidden");
+  }
+
+  roleTxt.innerText = myRole.toUpperCase();
+
+  statusTxt.innerText =
+    game.status === "SETUP"
+      ? (myRole === "creator" ? "Posicione as minas" : "Aguardando o criador…")
+      : game.status === "PLAYING"
+      ? "Campo ativo!"
+      : game.status === "WON"
+      ? "Vitória 🎉"
+      : "Explodiu 💥";
+
+  grid.innerHTML = "";
+
+  for (let i = 0; i < 100; i++) {
+    const cell = document.createElement("div");
+    cell.className = "cell bg-purple-900/40";
+
+    const rev = game.revealed.includes(i);
+    const bomb = game.bombs.includes(i);
+    const flag = game.flags.includes(i);
+
+    if (rev) {
+      cell.classList.add("revealed");
+      cell.innerText = bomb ? "💣" : (adj(i) || "");
+      if (bomb) cell.classList.add("bomb");
+    }
+
+    if (flag) {
+      cell.innerText = "🚩";
+      cell.classList.add("flag");
+    }
+
+    if (myRole === "creator" && game.status === "SETUP" && bomb) {
+      cell.className = "cell bg-purple-700";
+      cell.innerText = "•";
+    }
+
+    cell.onclick = async () => {
+      if (game.status === "SETUP" && myRole === "creator") {
+        let b = [...game.bombs];
+        b = b.includes(i)
+          ? b.filter(x => x !== i)
+          : (b.length < 20 ? [...b, i] : b);
+        await updateDoc(gameRef, { bombs: b });
+      }
+
+      if (game.status === "PLAYING" && myRole === "challenger" && !rev) {
+        if (bomb) {
+          await updateDoc(gameRef, {
+            status: "LOST",
+            revealed: [...Array(100).keys()]
+          });
+        } else {
+          let newRev = adj(i) === 0 ? floodFill(i) : [...game.revealed, i];
+          newRev = Array.from(new Set(newRev));
+          const win = newRev.length === 100 - game.bombs.length;
+          await updateDoc(gameRef, {
+            revealed: newRev,
+            status: win ? "WON" : "PLAYING"
+          });
+        }
+      }
+    };
+
+    cell.oncontextmenu = async e => {
+      e.preventDefault();
+      if (myRole === "challenger" && game.status === "PLAYING" && !rev) {
+        let f = game.flags.includes(i)
+          ? game.flags.filter(x => x !== i)
+          : [...game.flags, i];
+        await updateDoc(gameRef, { flags: f });
+      }
+    };
+
+    grid.appendChild(cell);
+  }
+
+  if (game.status === "SETUP" && myRole === "creator" && game.bombs.length > 0) {
+    const btn = document.createElement("button");
+    btn.innerText = "INICIAR";
+    btn.className = "mt-4 bg-fuchsia-500 hover:bg-fuchsia-400 transition text-black px-4 py-2 rounded-xl font-bold";
+    btn.onclick = () => updateDoc(gameRef, { status: "PLAYING" });
+    grid.appendChild(btn);
+  }
+}
+
+async function resetGame() {
+  myRole = null;
+  await setDoc(gameRef, {
+    creator: null,
+    challenger: null,
+    status: "WAITING",
+    bombs: [],
+    revealed: [],
+    flags: []
+  });
+  location.reload();
+}
+</script>
+</body>
+</html>
