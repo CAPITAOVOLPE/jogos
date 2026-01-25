@@ -236,37 +236,12 @@ function playShootSound() {
             overlay.classList.add('hit-flash');
         }
 
-        function createGrassTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024;
-            canvas.height = 1024;
-            const context = canvas.getContext('2d');
-            context.fillStyle = '#1a331a';
-            context.fillRect(0, 0, 1024, 1024);
-            for (let i = 0; i < 20000; i++) {
-                const x = Math.random() * 1024;
-                const y = Math.random() * 1024;
-                const size = 2 + Math.random() * 4;
-                const roll = Math.random();
-                if (roll > 0.8) context.fillStyle = '#0a140a';
-                else if (roll > 0.5) context.fillStyle = '#22441e';
-                else if (roll > 0.2) context.fillStyle = '#1e3f1a';
-                else context.fillStyle = '#2d5a27';
-                context.fillRect(x, y, size, size);
-            }
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(50, 50); 
-            return texture;
-        }
-
         async function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB); 
             scene.fog = new THREE.FogExp2(0x87CEEB, 0.0008);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+           camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2500);
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -281,15 +256,19 @@ function playShootSound() {
             muzzleFlash = new THREE.PointLight(0xffff00, 0, 20);
             scene.add(muzzleFlash);
 
-            const mapSize = 5000;
+            const mapSize = 2500;
             const groundGeometry = new THREE.PlaneGeometry(mapSize, mapSize);
-            const groundMaterial = new THREE.MeshPhongMaterial({ map: createGrassTexture(), shininess: 0 });
+            const groundMaterial = new THREE.MeshPhongMaterial({
+    color: 0x1f5f1f,
+    shininess: 0
+});
+;
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -100;
             scene.add(ground);
 
-            const treeCount = 5000;
+            const treeCount = 3000;
             const trunkGeo = new THREE.CylinderGeometry(1.2, 1.2, 8, 5);
             const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d1f00 });
             const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, treeCount);
@@ -323,15 +302,31 @@ function playShootSound() {
             } catch (e) { console.error("Erro auth:", e); return; }
 
             onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    myId = user.uid;
-                    document.getElementById('player-id').innerText = myId.substring(0, 8).toUpperCase();
-                    setupPlayer();
-                    startSync();
-                    document.getElementById('loading-overlay').style.display = 'none';
-                    animate();
-                }
-            });
+    if (!user) return;
+
+    myId = user.uid;
+
+    document.getElementById('player-id').innerText =
+        myId.substring(0, 8).toUpperCase();
+
+    setupPlayer();
+    startSync();
+
+    const cleanup = () => {
+        try {
+            if (myId) {
+                deleteDoc(doc(db, 'artifacts', gameId, 'public', 'data', 'players', myId));
+            }
+        } catch {}
+    };
+
+    window.addEventListener("beforeunload", cleanup);
+    window.addEventListener("pagehide", cleanup);
+
+    document.getElementById('loading-overlay').style.display = 'none';
+    animate();
+});
+
         }
 
         function createPlaneMesh(color) {
@@ -484,7 +479,7 @@ function playShootSound() {
             isFalling = false;
             document.getElementById('warning-msg').classList.add('hidden');
             document.getElementById('health-fill').classList.remove('danger');
-            myPlane.position.set((Math.random()-0.5)*1500, 250, (Math.random()-0.5)*1500);
+            myPlane.position.set((Math.random()-0.5)*700, 250, (Math.random()-0.5)*700);
             myPlane.rotation.set(0, Math.random() * Math.PI * 2, 0);
             updateDoc(doc(db, 'artifacts', gameId, 'public', 'data', 'players', myId), { health: 100 });
         }
@@ -634,4 +629,5 @@ function playShootSound() {
         init();
     </script>
 </body>
+
 </html>
