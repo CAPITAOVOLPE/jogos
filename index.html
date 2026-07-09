@@ -104,13 +104,16 @@
 
         function submitToWhatsApp() {
             const name = document.getElementById('name').value;
-            const birthdate = document.getElementById('birthdate').value;
+            const birthdateRaw = document.getElementById('birthdate').value; // Pega a data YYYY-MM-DD
             const count = document.getElementById('numQuestions').value;
             
-            if (!name || !birthdate) {
+            if (!name || !birthdateRaw) {
                 alert('Por favor, preencha seu nome e data de nascimento.');
                 return;
             }
+
+            const [year, month, day] = birthdateRaw.split('-');
+            const birthdateFormatted = `${day}/${month}/${year}`;
 
             let questionsText = "";
             for (let i = 1; i <= count; i++) {
@@ -123,7 +126,7 @@
             }
 
             const total = prices[count];
-            const message = `Olá! Gostaria de uma leitura de Tarot.%0A%0A*Nome:* ${name}%0A%0A*Data de Nascimento:* ${birthdate}%0A%0A*Quantidade de Perguntas:* ${count}%0A%0A*Perguntas:* ${questionsText}%0A%0A*Valor a pagar:* R$ ${total},00`;
+            const message = `Olá! Gostaria de uma leitura de Tarot.%0A%0A*Nome:* ${name}%0A%0A*Data de Nascimento:* ${birthdateFormatted}%0A%0A*Quantidade de Perguntas:* ${count}%0A%0A*Perguntas:* ${questionsText}%0A%0A*Valor a pagar:* R$ ${total},00`;
             const url = `https://wa.me/5511991156522?text=${message}`;
             
             window.open(url, '_blank');
