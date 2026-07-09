@@ -123,7 +123,7 @@
             }
 
             const total = prices[count];
-            const message = `Olá! Gostaria de uma leitura de Tarot.%0A%0A*Nome:* ${name}%0A*Data de Nascimento:* ${birthdate}%0A*Qtd Perguntas:* ${count}%0A*Perguntas:* ${questionsText}%0A%0A*Valor a pagar:* R$ ${total},00`;
+            const message = `Olá! Gostaria de uma leitura de Tarot.%0A%0A*Nome:* ${name}%0A%0A*Data de Nascimento:* ${birthdate}%0A%0AQuantidade de Perguntas:* ${count}%0A%0A*Perguntas:* ${questionsText}%0A%0A*Valor a pagar:* R$ ${total},00`;
             const url = `https://wa.me/5511991156522?text=${message}`;
             
             window.open(url, '_blank');
