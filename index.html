@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cantinho</title>
   <style>
     * {
@@ -10,147 +10,158 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
-  background-color: #72a3c4; 
-  background-image: radial-gradient(#fbcfe8 1.5px, transparent 1.5px); 
-  background-size: 20px 20px;
-  font-family: 'Segoe UI', cursive, sans-serif;
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-}
+      background-color: #e0f2fe; /* Azul bebê pastel */
+      background-image: radial-gradient(#fbcfe8 1.5px, transparent 1.5px); /* Pontos rosa claro */
+      background-size: 20px 20px;
+      font-family: 'Segoe UI', cursive, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
 
-/* --- TELA DE LOGIN --- */
-#login-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(224, 242, 254, 0.85); 
-  backdrop-filter: blur(12px);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+    /* --- TELA DE LOGIN --- */
+    #login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(224, 242, 254, 0.85); 
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-.login-card {
-  background: #fce7f3; 
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(244, 114, 182, 0.25); 
-  width: 90%;
-  max-width: 360px;
-  text-align: center;
-  border: 1px solid #fbcfe8;
-}
+    .login-card {
+      background: #fce7f3; /* Rosa bebê pastel */
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(244, 114, 182, 0.25); 
+      width: 90%;
+      max-width: 360px;
+      text-align: center;
+      border: 1px solid #fbcfe8;
+    }
 
-.login-card h2 {
-  margin-bottom: 20px;
-  color: #0284c7; 
-  font-size: 1.6rem;
-}
+    .login-card h2 {
+      margin-bottom: 20px;
+      color: #0284c7; 
+      font-size: 1.6rem;
+    }
 
-.login-card input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 1px solid #fbcfe8;
-  border-radius: 10px;
-  font-size: 1rem;
-  outline: none;
-  background-color: #ffffff;
-  color: #334155;
-}
+    .login-card input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #fbcfe8;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      background-color: #ffffff;
+      color: #334155;
+    }
 
-.login-card input:focus {
-  border-color: #38bdf8;
-}
+    .login-card input:focus {
+      border-color: #38bdf8;
+    }
 
-.login-card button {
-  width: 100%;
-  padding: 12px;
-  background: #7dd3fc; 
-  color: #0f172a;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+    .login-card button {
+      width: 100%;
+      padding: 12px;
+      background: #7dd3fc; 
+      color: #0f172a;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
 
-.login-card button:hover {
-  background: #38bdf8;
-}
+    .login-card button:hover {
+      background: #38bdf8;
+    }
 
-.login-error {
-  color: #f43f5e;
-  font-size: 0.85rem;
-  margin-top: 10px;
-  display: none;
-}
+    .login-error {
+      color: #f43f5e;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
 
-/* --- BARRA DE FERRAMENTAS --- */
-#toolbar {
-  position: fixed;
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(81, 187, 160, 0.9); 
-  backdrop-filter: blur(10px);
-  padding: 10px 20px;
-  border-radius: 30px;
-  box-shadow: 0 8px 20px rgba(186, 230, 253, 0.4);
-  display: flex;
-  gap: 10px;
-  z-index: 1000;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  border: 1px solid #bae6fd;
-}
+    /* --- BARRA DE FERRAMENTAS --- */
+    #toolbar {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.92); 
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 30px;
+      box-shadow: 0 8px 20px rgba(186, 230, 253, 0.4);
+      display: flex;
+      gap: 8px;
+      z-index: 1000;
+      align-items: center;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      border: 1px solid #bae6fd;
+      max-width: 95vw;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
 
-.user-badge {
-  font-weight: bold;
-  color: #0284c7;
-  padding: 6px 12px;
-  background: #e0f2fe;
-  border-radius: 15px;
-  font-size: 0.85rem;
-  margin-right: 5px;
-}
+    #toolbar::-webkit-scrollbar {
+      display: none;
+    }
 
-.btn {
-  background: #bae6fd; 
-  color: #0369a1;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: background 0.2s, transform 0.1s;
-}
+    .user-badge {
+      font-weight: bold;
+      color: #0284c7;
+      padding: 6px 12px;
+      background: #e0f2fe;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
 
-.btn:hover {
-  background: #7dd3fc;
-  transform: scale(1.05);
-}
+    .btn {
+      background: #bae6fd; 
+      color: #0369a1;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
 
-.btn.active {
-  background: #fbcfe8; 
-  color: #be185d;
-}
+    .btn:hover {
+      background: #7dd3fc;
+      transform: scale(1.03);
+    }
 
-.btn-special {
-  background: linear-gradient(135deg, #fbcfe8, #f472b6); 
-  color: #831843;
-  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
-}
+    .btn.active {
+      background: #fbcfe8; 
+      color: #be185d;
+    }
+
+    .btn-special {
+      background: linear-gradient(135deg, #fbcfe8, #f472b6); 
+      color: #831843;
+      box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
+    }
 
     /* --- CANVAS & QUADRO --- */
     #board {
@@ -170,6 +181,7 @@
       height: 100vh;
       z-index: 2;
       pointer-events: none;
+      touch-action: none;
     }
 
     #draw-canvas.drawing-active {
@@ -180,25 +192,27 @@
     /* --- CARDS & ELEMENTOS --- */
     .item {
       position: absolute;
-      padding: 15px;
+      padding: 12px;
       background: #ffffff;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
       cursor: grab;
-      min-width: 150px;
-      min-height: 100px;
-      width: 200px;
+      min-width: 140px;
+      min-height: 90px;
+      width: 190px;
+      touch-action: none;
     }
 
     .item:active {
       cursor: grabbing;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
     }
 
     .item.note {
-      background: #fef08a;
+      background: #fef9c3; /* Amarelo/creme pastel */
       color: #713f12;
       font-family: 'Comic Sans MS', cursive, sans-serif;
+      border: 1px solid #fef08a;
     }
 
     .item.note textarea {
@@ -209,8 +223,10 @@
       width: 100%;
       height: calc(100% - 10px);
       font-family: inherit;
-      font-size: 1.05rem;
+      font-size: 1rem;
       color: inherit;
+      user-select: text;
+      -webkit-user-select: text;
     }
 
     .item.photo img {
@@ -232,12 +248,12 @@
       position: absolute;
       top: -8px;
       right: -8px;
-      background: #ef4444;
+      background: #f43f5e;
       color: white;
       border: none;
       border-radius: 50%;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       font-size: 12px;
       cursor: pointer;
       display: none;
@@ -246,20 +262,31 @@
 
     .resize-handle {
       position: absolute;
-      width: 14px;
-      height: 14px;
-      right: 2px;
-      bottom: 2px;
-      background: #8b5cf6;
+      width: 22px;
+      height: 22px;
+      right: -4px;
+      bottom: -4px;
+      background: #38bdf8;
+      border: 2px solid #ffffff;
       border-radius: 50%;
       cursor: se-resize;
       display: none;
       z-index: 10;
+      touch-action: none;
     }
 
     .item:hover .delete-btn,
-    .item:hover .resize-handle {
+    .item:hover .resize-handle,
+    .item:focus-within .delete-btn,
+    .item:focus-within .resize-handle {
       display: block;
+    }
+
+    /* No celular exibe os controles ao tocar */
+    @media (hover: none) {
+      .delete-btn, .resize-handle {
+        display: block !important;
+      }
     }
 
     /* --- ANIMAÇÃO CHUVA DE EMOJIS --- */
@@ -286,7 +313,7 @@
   <div id="login-overlay">
     <div class="login-card">
       <h2>Nosso Cantinho</h2>
-      <input type="text" id="login-user" placeholder="Usuário">
+      <input type="text" id="login-user" placeholder="Usuário" autocomplete="off">
       <input type="password" id="login-pass" placeholder="Senha">
       <button onclick="checkLogin()">Entrar</button>
       <div class="login-error" id="login-error">Usuário ou senha incorretos!</div>
@@ -298,11 +325,11 @@
     <span class="user-badge" id="user-display">Usuário</span>
     <button class="btn" onclick="addNote()">+ Nota</button>
     <button class="btn" onclick="triggerFileInput('image')">+ Foto</button>
-    <button class="btn" onclick="triggerFileInput('audio')">+ Músicas/Áudio</button>
+    <button class="btn" onclick="triggerFileInput('audio')">+ Áudio</button>
     <button class="btn" id="draw-toggle" onclick="setMode('draw')">🎨 Desenhar</button>
     <button class="btn" id="erase-toggle" onclick="setMode('erase')">🧹 Borracha</button>
-    <button class="btn btn-special" onclick="sendEmojiRain()">✨ Enviar Emoji</button>
-    <button class="btn" style="background:#ef4444" onclick="clearCanvas()">Limpar Tela</button>
+    <button class="btn btn-special" onclick="sendEmojiRain()">✨ Emoji</button>
+    <button class="btn" style="background:#fca5a5; color:#7f1d1d;" onclick="clearCanvas()">Limpar</button>
     <input type="file" id="file-input" style="display: none;" accept="">
   </div>
 
@@ -366,14 +393,12 @@
       document.getElementById('toolbar').style.display = 'flex';
       document.getElementById('user-display').innerText = displayName;
 
-      // Se houver algum emoji pendente recebido antes do login, dispara a chuva agora
       if (pendingEmoji) {
         triggerEmojiRain(pendingEmoji);
         pendingEmoji = null;
       }
     }
 
-    // Auto-login se já tiver sessão iniciada
     const savedUser = sessionStorage.getItem('current_user');
     if (savedUser) {
       loginSuccess(savedUser);
@@ -428,11 +453,11 @@
 
       if (activeTool === 'draw') {
         ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = '#ec4899';
+        ctx.strokeStyle = '#f472b6';
         ctx.lineWidth = 4;
       } else if (activeTool === 'erase') {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 24;
+        ctx.lineWidth = 26;
       }
 
       ctx.lineCap = 'round';
@@ -449,8 +474,9 @@
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('touchmove', draw);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
     canvas.addEventListener('touchend', stopDrawing);
 
     function saveCanvasToFirebase() {
@@ -478,7 +504,7 @@
 
     // --- EMOJI RAIN ESPECIAL ---
     window.sendEmojiRain = function() {
-      const emoji = prompt("Qual emoji você quer enviar para cair na tela?", "❤️");
+      const emoji = prompt("Qual emoji você quer enviar?", "❤️");
       if (emoji && emoji.trim() !== "") {
         set(emojiRef, {
           emoji: emoji.trim(),
@@ -493,7 +519,7 @@
           const el = document.createElement('div');
           el.className = 'emoji-rain';
           el.innerText = emoji;
-          el.style.left = Math.random() * 95 + 'vw';
+          el.style.left = Math.random() * 92 + 'vw';
           el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
           document.body.appendChild(el);
 
@@ -502,7 +528,6 @@
       }
     }
 
-    // Ouvir novos emojis enviados
     let lastEmojiTime = 0;
     onValue(emojiRef, (snapshot) => {
       const data = snapshot.val();
@@ -516,63 +541,85 @@
       }
     });
 
-    // --- ARRASTAR E REDIMENSIONAR ITENS ---
+    // --- ARRASTAR E REDIMENSIONAR (MOUSE + TOUCH) ---
     function makeInteractive(element) {
-      let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
+      let posX = 0, posY = 0, initialX = 0, initialY = 0;
 
-      element.onmousedown = (e) => {
+      const dragStart = (e) => {
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || 
             e.target.tagName === 'AUDIO' || e.target.classList.contains('resize-handle')) return;
-        
-        e.preventDefault();
-        mouseX = e.clientX;
-        mouseY = e.clientY;
 
-        document.onmousemove = (e) => {
-          e.preventDefault();
-          posX = mouseX - e.clientX;
-          posY = mouseY - e.clientY;
-          mouseX = e.clientX;
-          mouseY = e.clientY;
+        const pos = getPos(e);
+        initialX = pos.x;
+        initialY = pos.y;
 
-          element.style.top = (element.offsetTop - posY) + "px";
-          element.style.left = (element.offsetLeft - posX) + "px";
-        };
-
-        document.onmouseup = () => {
-          document.onmousemove = null;
-          document.onmouseup = null;
-          saveItemsToFirebase();
-        };
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchmove', dragMove, { passive: false });
+        document.addEventListener('touchend', dragEnd);
       };
 
+      const dragMove = (e) => {
+        const pos = getPos(e);
+        posX = initialX - pos.x;
+        posY = initialY - pos.y;
+        initialX = pos.x;
+        initialY = pos.y;
+
+        element.style.top = (element.offsetTop - posY) + "px";
+        element.style.left = (element.offsetLeft - posX) + "px";
+      };
+
+      const dragEnd = () => {
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('mouseup', dragEnd);
+        document.removeEventListener('touchmove', dragMove);
+        document.removeEventListener('touchend', dragEnd);
+        saveItemsToFirebase();
+      };
+
+      element.addEventListener('mousedown', dragStart);
+      element.addEventListener('touchstart', dragStart, { passive: false });
+
+      // Redimensionamento
       const resizeHandle = element.querySelector('.resize-handle');
       if (resizeHandle) {
-        resizeHandle.onmousedown = (e) => {
+        const resizeStart = (e) => {
           e.stopPropagation();
-          e.preventDefault();
+          const pos = getPos(e);
           let startW = element.offsetWidth;
           let startH = element.offsetHeight;
-          let startX = e.clientX;
-          let startY = e.clientY;
+          let startX = pos.x;
+          let startY = pos.y;
 
-          document.onmousemove = (e) => {
-            let newW = startW + (e.clientX - startX);
-            let newH = startH + (e.clientY - startY);
-            if (newW > 120) element.style.width = newW + 'px';
-            if (newH > 80) element.style.height = newH + 'px';
+          const resizeMove = (e) => {
+            const p = getPos(e);
+            let newW = startW + (p.x - startX);
+            let newH = startH + (p.y - startY);
+            if (newW > 110) element.style.width = newW + 'px';
+            if (newH > 70) element.style.height = newH + 'px';
           };
 
-          document.onmouseup = () => {
-            document.onmousemove = null;
-            document.onmouseup = null;
+          const resizeEnd = () => {
+            document.removeEventListener('mousemove', resizeMove);
+            document.removeEventListener('mouseup', resizeEnd);
+            document.removeEventListener('touchmove', resizeMove);
+            document.removeEventListener('touchend', resizeEnd);
             saveItemsToFirebase();
           };
+
+          document.addEventListener('mousemove', resizeMove);
+          document.addEventListener('mouseup', resizeEnd);
+          document.addEventListener('touchmove', resizeMove, { passive: false });
+          document.addEventListener('touchend', resizeEnd);
         };
+
+        resizeHandle.addEventListener('mousedown', resizeStart);
+        resizeHandle.addEventListener('touchstart', resizeStart, { passive: false });
       }
     }
 
-    function createBaseItem(type, id, x = 100, y = 100, w = 200, h = 150) {
+    function createBaseItem(type, id, x = 100, y = 100, w = 190, h = 130) {
       const item = document.createElement('div');
       item.className = `item ${type}`;
       item.dataset.id = id;
@@ -598,7 +645,7 @@
       return item;
     }
 
-    window.addNote = function(text = 'Escreva algo aqui...', id = Date.now().toString(), x = 150, y = 150, w = 200, h = 150) {
+    window.addNote = function(text = 'Escreva algo aqui...', id = Date.now().toString(), x = 120, y = 120, w = 190, h = 130) {
       if (document.querySelector(`[data-id="${id}"]`)) return;
       const item = createBaseItem('note', id, x, y, w, h);
       const textarea = document.createElement('textarea');
@@ -632,7 +679,7 @@
       fileInput.value = '';
     });
 
-    function addPhoto(src, id = Date.now().toString(), x = 200, y = 200, w = 220, h = 180) {
+    function addPhoto(src, id = Date.now().toString(), x = 150, y = 150, w = 200, h = 160) {
       if (document.querySelector(`[data-id="${id}"]`)) return;
       const item = createBaseItem('photo', id, x, y, w, h);
       const img = document.createElement('img');
@@ -642,7 +689,7 @@
       if (!isSyncingFromRemote) saveItemsToFirebase();
     }
 
-    function addAudio(src, id = Date.now().toString(), x = 250, y = 250, w = 250, h = 90) {
+    function addAudio(src, id = Date.now().toString(), x = 160, y = 160, w = 220, h = 80) {
       if (document.querySelector(`[data-id="${id}"]`)) return;
       const item = createBaseItem('audio', id, x, y, w, h);
       const audio = document.createElement('audio');
