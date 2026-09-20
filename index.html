@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Permite zoom livre em telas touch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cantinho</title>
   <style>
     * {
@@ -163,13 +164,33 @@
       box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
     }
 
+    /* --- CONTÊINER DE PAN & ZOOM --- */
+    #viewport {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #zoom-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3000px;
+      height: 3000px;
+      transform-origin: 0 0;
+    }
+
     /* --- CANVAS & QUADRO --- */
     #board {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       z-index: 1;
     }
 
@@ -177,8 +198,8 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       z-index: 2;
       pointer-events: none;
       touch-action: none;
@@ -282,7 +303,6 @@
       display: block;
     }
 
-    /* No celular exibe os controles ao tocar */
     @media (hover: none) {
       .delete-btn, .resize-handle {
         display: block !important;
@@ -329,12 +349,18 @@
     <button class="btn" id="draw-toggle" onclick="setMode('draw')">🎨 Desenhar</button>
     <button class="btn" id="erase-toggle" onclick="setMode('erase')">🧹 Borracha</button>
     <button class="btn btn-special" onclick="sendEmojiRain()">✨ Emoji</button>
+    <button class="btn" onclick="resetZoom()">🔍 Reset Zoom</button>
     <button class="btn" style="background:#fca5a5; color:#7f1d1d;" onclick="clearCanvas()">Limpar</button>
     <input type="file" id="file-input" style="display: none;" accept="">
   </div>
 
-  <div id="board"></div>
-  <canvas id="draw-canvas"></canvas>
+  <!-- Contêiner Interativo para Zoom e Navegação -->
+  <div id="viewport">
+    <div id="zoom-container">
+      <div id="board"></div>
+      <canvas id="draw-canvas"></canvas>
+    </div>
+  </div>
 
   <!-- Firebase via Módulos CDN -->
   <script type="module">
@@ -359,6 +385,8 @@
     const drawingRef = ref(db, 'mural/drawing');
     const emojiRef = ref(db, 'mural/emoji_rain');
 
+    const viewport = document.getElementById('viewport');
+    const zoomContainer = document.getElementById('zoom-container');
     const board = document.getElementById('board');
     const canvas = document.getElementById('draw-canvas');
     const ctx = canvas.getContext('2d');
@@ -370,6 +398,68 @@
     let isSyncingFromRemote = false;
     let isLoggedIn = false;
     let pendingEmoji = null;
+
+    // --- CONTROLE DE PAN & ZOOM ---
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let startDist = 0;
+    let startScale = 1;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isPanning = false;
+
+    function applyTransform() {
+      zoomContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
+    window.resetZoom = function() {
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      applyTransform();
+    };
+
+    function getDistance(t1, t2) {
+      return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    }
+
+    viewport.addEventListener('touchstart', (e) => {
+      // Se tiver desenhando ou tocando em um card/item, ignora o pan da tela inteira
+      if (e.target.closest('.item') || (activeTool && e.touches.length === 1)) return;
+
+      if (e.touches.length === 2) {
+        startDist = getDistance(e.touches[0], e.touches[1]);
+        startScale = scale;
+      } else if (e.touches.length === 1) {
+        isPanning = true;
+        touchStartX = e.touches[0].clientX - panX;
+        touchStartY = e.touches[0].clientY - panY;
+      }
+    }, { passive: false });
+
+    viewport.addEventListener('touchmove', (e) => {
+      if (e.target.closest('.item') || (activeTool && e.touches.length === 1)) return;
+
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        if (startDist > 0) {
+          scale = Math.min(Math.max(0.5, startScale * (dist / startDist)), 3);
+          applyTransform();
+        }
+      } else if (e.touches.length === 1 && isPanning) {
+        e.preventDefault();
+        panX = e.touches[0].clientX - touchStartX;
+        panY = e.touches[0].clientY - touchStartY;
+        applyTransform();
+      }
+    }, { passive: false });
+
+    viewport.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) startDist = 0;
+      if (e.touches.length === 0) isPanning = false;
+    });
 
     // --- SESSÃO E LOGIN ---
     window.checkLogin = function() {
@@ -406,10 +496,9 @@
 
     // --- CANVAS & DESENHO / BORRACHA ---
     function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = 3000;
+      canvas.height = 3000;
     }
-    window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
     window.setMode = function(mode) {
@@ -429,35 +518,38 @@
       }
     };
 
-    function getPos(e) {
-      if (e.touches && e.touches.length > 0) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
-      return { x: e.clientX, y: e.clientY };
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) / scale,
+        y: (clientY - rect.top) / scale
+      };
     }
 
     function startDrawing(e) {
-      if (!activeTool) return;
+      if (!activeTool || (e.touches && e.touches.length > 1)) return;
       isDrawing = true;
-      const pos = getPos(e);
+      const pos = getCanvasPos(e);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
     }
 
     function draw(e) {
-      if (!isDrawing || !activeTool) return;
+      if (!isDrawing || !activeTool || (e.touches && e.touches.length > 1)) return;
       e.preventDefault();
-      const pos = getPos(e);
+      const pos = getCanvasPos(e);
 
       ctx.lineTo(pos.x, pos.y);
 
       if (activeTool === 'draw') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = '#f472b6';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4 / scale;
       } else if (activeTool === 'erase') {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 26;
+        ctx.lineWidth = 26 / scale;
       }
 
       ctx.lineCap = 'round';
@@ -541,9 +633,16 @@
       }
     });
 
-    // --- ARRASTAR E REDIMENSIONAR (MOUSE + TOUCH) ---
+    // --- ARRASTAR E REDIMENSIONAR DE ITENS COM COMPENSAÇÃO DE ZOOM ---
     function makeInteractive(element) {
       let posX = 0, posY = 0, initialX = 0, initialY = 0;
+
+      const getPos = (e) => {
+        if (e.touches && e.touches.length > 0) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      };
 
       const dragStart = (e) => {
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || 
@@ -561,8 +660,8 @@
 
       const dragMove = (e) => {
         const pos = getPos(e);
-        posX = initialX - pos.x;
-        posY = initialY - pos.y;
+        posX = (initialX - pos.x) / scale;
+        posY = (initialY - pos.y) / scale;
         initialX = pos.x;
         initialY = pos.y;
 
@@ -581,7 +680,7 @@
       element.addEventListener('mousedown', dragStart);
       element.addEventListener('touchstart', dragStart, { passive: false });
 
-      // Redimensionamento
+      // Redimensionamento com ajuste de escala
       const resizeHandle = element.querySelector('.resize-handle');
       if (resizeHandle) {
         const resizeStart = (e) => {
@@ -594,8 +693,8 @@
 
           const resizeMove = (e) => {
             const p = getPos(e);
-            let newW = startW + (p.x - startX);
-            let newH = startH + (p.y - startY);
+            let newW = startW + (p.x - startX) / scale;
+            let newH = startH + (p.y - startY) / scale;
             if (newW > 110) element.style.width = newW + 'px';
             if (newH > 70) element.style.height = newH + 'px';
           };
