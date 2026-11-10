@@ -354,6 +354,7 @@
         let currentRoomId = null;
         let roomUnsubscribe = null;
         let isHost = false;
+        let lastSyncTime = 0;
 
         async function initAuth() {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -485,7 +486,6 @@
             document.getElementById('connected-count').innerText = "1";
 
             try {
-                // Procurar por salas abertas para o mesmo modo
                 const roomsSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'));
                 let foundRoom = null;
 
@@ -500,7 +500,7 @@
                     id: currentUserId,
                     username: currentUserData.username,
                     vehicleType: window.selectedVehicleType,
-                    x: 0, y: 0, angle: 0, hp: 100, alive: true,
+                    x: 100, y: 250, angle: 0, hp: 100, alive: true,
                     lastUpdate: Date.now()
                 };
 
@@ -552,7 +552,6 @@
                     </span>
                 `).join('');
 
-                // Se a sala completou o total de jogadores necessários
                 if (roomData.players.length >= requiredCount && roomData.status === 'waiting') {
                     if (isHost) {
                         updateDoc(roomRef, { status: 'playing' });
@@ -562,6 +561,8 @@
                 if (roomData.status === 'playing') {
                     document.getElementById('matchmakingOverlay').classList.add('hidden');
                     window.startOnlineMatch(roomData);
+                    // Atualizar posições dos outros jogadores na partida
+                    window.updateRemotePlayers(roomData.players);
                 }
             }, (error) => {
                 console.error("Erro ao escutar sala:", error);
@@ -589,8 +590,13 @@
             document.getElementById('matchmakingOverlay').classList.add('hidden');
         };
 
+        // ENVIAR POSIÇÃO ATUAL EM TEMPO REAL VIA FIRESTORE
         window.syncMyPosition = async function(vehicleData) {
             if (!currentRoomId) return;
+            const now = Date.now();
+            if (now - lastSyncTime < 80) return; // Limitar taxa para 12 FPS de sync
+            lastSyncTime = now;
+
             try {
                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
                 const roomSnap = await getDoc(roomRef);
@@ -598,7 +604,7 @@
                     const players = roomSnap.data().players;
                     const myIdx = players.findIndex(p => p.id === currentUserId);
                     if (myIdx !== -1) {
-                        players[myIdx] = { ...players[myIdx], ...vehicleData, lastUpdate: Date.now() };
+                        players[myIdx] = { ...players[myIdx], ...vehicleData, lastUpdate: now };
                         await updateDoc(roomRef, { players: players });
                     }
                 }
@@ -1028,6 +1034,16 @@
 
                 if (this.isPlayer) {
                     this.handlePlayerInput();
+                    // Transmitir posição do jogador atual em tempo real para Firestore
+                    if (window.syncMyPosition) {
+                        window.syncMyPosition({
+                            x: this.x,
+                            y: this.y,
+                            angle: this.angle,
+                            hp: this.hp,
+                            alive: this.alive
+                        });
+                    }
                 }
 
                 if (this.type === 'jet' && Math.abs(this.speed) < 2.0) {
@@ -1448,10 +1464,17 @@
             }
         }
 
-        window.onload = () => {
-            resizeCanvas();
-            updateMoneyUI();
-            requestAnimationFrame(gameLoop);
+        window.updateRemotePlayers = function(playersList) {
+            playersList.forEach(pData => {
+                const remoteVeh = vehicles.find(v => v.username === pData.username);
+                if (remoteVeh && !remoteVeh.isPlayer) {
+                    remoteVeh.x = pData.x;
+                    remoteVeh.y = pData.y;
+                    remoteVeh.angle = pData.angle;
+                    remoteVeh.hp = pData.hp;
+                    remoteVeh.alive = pData.alive;
+                }
+            });
         };
     </script>
 </body>
