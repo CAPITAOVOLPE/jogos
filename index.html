@@ -717,22 +717,28 @@
             particles = [];
             targetMarkers = [];
             fireZones = [];
+            greenKills = 0;
+            redKills = 0;
 
-            const playersList = roomData.players;
+            // Garantir dimensões do Canvas e obstáculos antes de spawnar
+            resizeCanvas();
+
+            const playersList = roomData.players || [];
             const half = Math.ceil(playersList.length / 2);
 
             playersList.forEach((pData, idx) => {
                 const isGreen = idx < half;
                 const team = isGreen ? 'green' : 'red';
                 const teamIdx = isGreen ? idx : (idx - half);
-                const countInTeam = isGreen ? half : (playersList.length - half);
+                const countInTeam = isGreen ? half : Math.max(1, playersList.length - half);
 
                 const startX = isGreen ? 80 : (canvas.width - 80);
                 const startY = (canvas.height / (countInTeam + 1)) * (teamIdx + 1);
 
-                const isMe = pData.username === document.getElementById('player-username').innerText;
+                const currentMyNick = currentUserData ? currentUserData.username : '';
+                const isMe = pData.username === currentMyNick || pData.id === currentUserId;
 
-                const v = new Vehicle(startX, startY, team, pData.vehicleType || 'humvee', isMe, pData.username);
+                const v = new Vehicle(startX, startY, team, pData.vehicleType || 'humvee', isMe, pData.username || 'Combatente');
                 vehicles.push(v);
 
                 if (isMe) player = v;
@@ -740,6 +746,12 @@
 
             rollMatchStakes();
             startMatchTimer();
+
+            // Reiniciar/Garantir o loop de renderização do Canvas
+            if (!window.gameLoopRunning) {
+                window.gameLoopRunning = true;
+                requestAnimationFrame(gameLoop);
+            }
         };
 
         function gameLoop() {
@@ -793,28 +805,12 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // --- CONTROLES WASD ---
-        window.addEventListener('keydown', e => {
-            if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        });
-
-        window.addEventListener('keyup', e => {
-            if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-        });
-
-        canvas.addEventListener('mousemove', e => {
-            const rect = canvas.getBoundingClientRect();
-            mousePos.x = e.clientX - rect.left;
-            mousePos.y = e.clientY - rect.top;
-        });
-
-        canvas.addEventListener('mousedown', e => {
-            if (e.button === 0 && player && player.alive) player.shoot();
-            if (e.button === 2 && player && player.alive) {
-                e.preventDefault();
-                player.useSpecial(mousePos.x, mousePos.y);
+        // Inicializar canvas e escutar resize
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            if (!window.gameLoopRunning) {
+                window.gameLoopRunning = true;
+                requestAnimationFrame(gameLoop);
             }
         });
 
