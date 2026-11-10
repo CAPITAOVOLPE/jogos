@@ -1,846 +1,1458 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <!-- Permite zoom livre em telas touch -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cantinho</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-    }
-
-    body {
-      background-color: #e0f2fe; /* Azul bebê pastel */
-      background-image: radial-gradient(#fbcfe8 1.5px, transparent 1.5px); /* Pontos rosa claro */
-      background-size: 20px 20px;
-      font-family: 'Segoe UI', cursive, sans-serif;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-      touch-action: none;
-    }
-
-    /* --- TELA DE LOGIN --- */
-    #login-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(224, 242, 254, 0.85); 
-      backdrop-filter: blur(12px);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .login-card {
-      background: #fce7f3; /* Rosa bebê pastel */
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 15px 35px rgba(244, 114, 182, 0.25); 
-      width: 90%;
-      max-width: 360px;
-      text-align: center;
-      border: 1px solid #fbcfe8;
-    }
-
-    .login-card h2 {
-      margin-bottom: 20px;
-      color: #0284c7; 
-      font-size: 1.6rem;
-    }
-
-    .login-card input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #fbcfe8;
-      border-radius: 10px;
-      font-size: 1rem;
-      outline: none;
-      background-color: #ffffff;
-      color: #334155;
-    }
-
-    .login-card input:focus {
-      border-color: #38bdf8;
-    }
-
-    .login-card button {
-      width: 100%;
-      padding: 12px;
-      background: #7dd3fc; 
-      color: #0f172a;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .login-card button:hover {
-      background: #38bdf8;
-    }
-
-    .login-error {
-      color: #f43f5e;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      display: none;
-    }
-
-    /* --- BARRA DE FERRAMENTAS --- */
-    #toolbar {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.92); 
-      backdrop-filter: blur(10px);
-      padding: 8px 14px;
-      border-radius: 30px;
-      box-shadow: 0 8px 20px rgba(186, 230, 253, 0.4);
-      display: flex;
-      gap: 8px;
-      z-index: 1000;
-      align-items: center;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      border: 1px solid #bae6fd;
-      max-width: 95vw;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    #toolbar::-webkit-scrollbar {
-      display: none;
-    }
-
-    .user-badge {
-      font-weight: bold;
-      color: #0284c7;
-      padding: 6px 12px;
-      background: #e0f2fe;
-      border-radius: 15px;
-      font-size: 0.85rem;
-      white-space: nowrap;
-    }
-
-    .btn {
-      background: #bae6fd; 
-      color: #0369a1;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.8rem;
-      white-space: nowrap;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn:hover {
-      background: #7dd3fc;
-      transform: scale(1.03);
-    }
-
-    .btn.active {
-      background: #fbcfe8; 
-      color: #be185d;
-    }
-
-    .btn-special {
-      background: linear-gradient(135deg, #fbcfe8, #f472b6); 
-      color: #831843;
-      box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
-    }
-
-    /* --- CONTÊINER DE PAN & ZOOM --- */
-    #viewport {
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    #zoom-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 3000px;
-      height: 3000px;
-      transform-origin: 0 0;
-    }
-
-    /* --- CANVAS & QUADRO --- */
-    #board {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    #draw-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-      touch-action: none;
-    }
-
-    #draw-canvas.drawing-active {
-      pointer-events: auto;
-      cursor: crosshair;
-    }
-
-    /* --- CARDS & ELEMENTOS --- */
-    .item {
-      position: absolute;
-      padding: 12px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-      cursor: grab;
-      min-width: 140px;
-      min-height: 90px;
-      width: 190px;
-      touch-action: none;
-    }
-
-    .item:active {
-      cursor: grabbing;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-    }
-
-    .item.note {
-      background: #fef9c3; /* Amarelo/creme pastel */
-      color: #713f12;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      border: 1px solid #fef08a;
-    }
-
-    .item.note textarea {
-      background: transparent;
-      border: none;
-      outline: none;
-      resize: none;
-      width: 100%;
-      height: calc(100% - 10px);
-      font-family: inherit;
-      font-size: 1rem;
-      color: inherit;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    .item.photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-      pointer-events: none;
-      display: block;
-    }
-
-    .item.audio audio {
-      width: 100%;
-      outline: none;
-    }
-
-    /* Botão Excluir & Alça de Redimensionamento */
-    .delete-btn {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #f43f5e;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-size: 12px;
-      cursor: pointer;
-      display: none;
-      z-index: 10;
-    }
-
-    .resize-handle {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      right: -4px;
-      bottom: -4px;
-      background: #38bdf8;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      cursor: se-resize;
-      display: none;
-      z-index: 10;
-      touch-action: none;
-    }
-
-    .item:hover .delete-btn,
-    .item:hover .resize-handle,
-    .item:focus-within .delete-btn,
-    .item:focus-within .resize-handle {
-      display: block;
-    }
-
-    @media (hover: none) {
-      .delete-btn, .resize-handle {
-        display: block !important;
-      }
-    }
-
-    /* --- ANIMAÇÃO CHUVA DE EMOJIS --- */
-    .emoji-rain {
-      position: fixed;
-      top: -50px;
-      font-size: 2rem;
-      pointer-events: none;
-      z-index: 999;
-      animation: fall 3.5s linear forwards;
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(110vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guerra de Veículos Blindados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        canvas {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background-color: #1e251b;
+        }
+        .btn-mode {
+            transition: all 0.2s ease;
+        }
+        .btn-mode.active {
+            background-color: #16a34a;
+            border-color: #4ade80;
+            color: white;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+        .vehicle-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .vehicle-card:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+        }
+        .vehicle-card.selected {
+            border-color: #22c55e;
+            background-color: rgba(34, 197, 94, 0.15);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        }
+        .cs-rating-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 md:p-4 overflow-x-hidden">
 
-  <!-- Tela de Login -->
-  <div id="login-overlay">
-    <div class="login-card">
-      <h2>Nosso Cantinho</h2>
-      <input type="text" id="login-user" placeholder="Usuário" autocomplete="off">
-      <input type="password" id="login-pass" placeholder="Senha">
-      <button onclick="checkLogin()">Entrar</button>
-      <div class="login-error" id="login-error">Usuário ou senha incorretos!</div>
+    <!-- TELA DE LOGIN / REGISTRO CS-STYLE -->
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl w-full max-w-md shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="inline-flex p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 mb-3">
+                    <i class="fa-solid fa-trophy text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-wide text-white">CS-RATING MILITAR</h2>
+                <p class="text-xs text-slate-400 mt-1">Crie seu apelido e senha para disputar o Leaderboard Global!</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nick de Combatente</label>
+                    <input type="text" id="loginUsername" required placeholder="Ex: General_Viper" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Senha de Acesso</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <div id="loginError" class="hidden text-xs text-rose-500 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20"></div>
+
+                <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 font-extrabold text-white rounded-lg shadow-lg shadow-amber-600/30 transition text-sm uppercase tracking-wider">
+                    Entrar na Arena
+                </button>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <!-- Barra de Ferramentas -->
-  <div id="toolbar" style="display: none;">
-    <span class="user-badge" id="user-display">Usuário</span>
-    <button class="btn" onclick="addNote()">+ Nota</button>
-    <button class="btn" onclick="triggerFileInput('image')">+ Foto</button>
-    <button class="btn" onclick="triggerFileInput('audio')">+ Áudio</button>
-    <button class="btn" id="draw-toggle" onclick="setMode('draw')">🎨 Desenhar</button>
-    <button class="btn" id="erase-toggle" onclick="setMode('erase')">🧹 Borracha</button>
-    <button class="btn btn-special" onclick="sendEmojiRain()">✨ Emoji</button>
-    <button class="btn" onclick="resetZoom()">🔍 Reset Zoom</button>
-    <button class="btn" style="background:#fca5a5; color:#7f1d1d;" onclick="clearCanvas()">Limpar</button>
-    <input type="file" id="file-input" style="display: none;" accept="">
-  </div>
+    <!-- MODAL DE LEADERBOARD GLOBAL -->
+    <div id="leaderboardOverlay" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-40">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star text-amber-400 text-xl"></i>
+                    <h3 class="text-lg font-black text-white uppercase tracking-wider">TOP RANKS PREMIER</h3>
+                </div>
+                <button onclick="toggleLeaderboard(false)" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-  <!-- Contêiner Interativo para Zoom e Navegação -->
-  <div id="viewport">
-    <div id="zoom-container">
-      <div id="board"></div>
-      <canvas id="draw-canvas"></canvas>
+            <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Firebase via Módulos CDN -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <!-- Header & Placard -->
+    <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-2 bg-slate-900/80 p-4 rounded-xl border border-slate-800 backdrop-blur">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-emerald-600/20 text-emerald-400 rounded-lg border border-emerald-500/30">
+                <i class="fa-solid fa-shield-halved text-2xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-bold text-xl tracking-wide text-emerald-400">ARMORED CLASH</h1>
+                    <span id="player-username" class="text-xs px-2 py-0.5 bg-slate-800 border border-slate-700 text-slate-300 rounded font-bold">---</span>
+                </div>
+                <!-- CS RATING CS2 -->
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">CS Rating:</span>
+                    <span id="player-rating" class="px-2 py-0.5 rounded text-xs font-black text-slate-950 cs-rating-badge">1.000 PTS</span>
+                </div>
+            </div>
+        </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAerJxRg8JF2W2DLLCLrI7d9pIFNprMQl0",
-      authDomain: "chatcat-73364.firebaseapp.com",
-      databaseURL: "https://chatcat-73364-default-rtdb.firebaseio.com",
-      projectId: "chatcat-73364",
-      storageBucket: "chatcat-73364.firebasestorage.app",
-      messagingSenderId: "645503800079",
-      appId: "1:645503800079:web:850860c42bec8a73e0e47a",
-      measurementId: "G-1K6TJ1G44X"
-    };
+        <!-- INDICADOR DE SORTEIO DE PONTOS DA PARTIDA (ESTILO CS2 PREMIER) -->
+        <div class="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
+            <div class="text-center">
+                <span class="block text-[9px] text-emerald-400 font-bold uppercase">Vitória</span>
+                <span id="stake-win" class="text-sm font-black text-emerald-400">+220</span>
+            </div>
+            <span class="text-slate-600 font-black text-xs">|</span>
+            <div class="text-center">
+                <span class="block text-[9px] text-rose-400 font-bold uppercase">Derrota</span>
+                <span id="stake-loss" class="text-sm font-black text-rose-400">-170</span>
+            </div>
+        </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+        <!-- Seletor de Modo -->
+        <div class="flex flex-wrap justify-center gap-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+            <button onclick="setGameMode(1)" id="mode-1" class="btn-mode active px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">1 x 1</button>
+            <button onclick="setGameMode(2)" id="mode-2" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">2 x 2</button>
+            <button onclick="setGameMode(3)" id="mode-3" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">3 x 3</button>
+            <button onclick="setGameMode(4)" id="mode-4" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">4 x 4</button>
+            <button onclick="setGameMode(5)" id="mode-5" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">5 x 5</button>
+        </div>
 
-    const itemsRef = ref(db, 'mural/items');
-    const drawingRef = ref(db, 'mural/drawing');
-    const emojiRef = ref(db, 'mural/emoji_rain');
+        <!-- Controles, Dinheiro & Status -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+            <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-950/40 border border-amber-500/40 rounded-lg">
+                <i class="fa-solid fa-coins text-amber-400 text-sm"></i>
+                <span id="player-money" class="text-sm font-black text-amber-400">$0</span>
+            </div>
 
-    const viewport = document.getElementById('viewport');
-    const zoomContainer = document.getElementById('zoom-container');
-    const board = document.getElementById('board');
-    const canvas = document.getElementById('draw-canvas');
-    const ctx = canvas.getContext('2d');
-    const fileInput = document.getElementById('file-input');
+            <button onclick="toggleLeaderboard(true)" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg transition border border-slate-700" title="Leaderboard Global">
+                <i class="fa-solid fa-trophy"></i>
+            </button>
+            <button onclick="showVehicleSelection()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Garagem / Loja">
+                <i class="fa-solid fa-store text-emerald-400"></i>
+            </button>
+            <button onclick="leaveQueueOrMatch()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Sair da Partida / Fila">
+                <i class="fa-solid fa-door-open text-rose-400"></i>
+            </button>
+        </div>
+    </header>
 
-    let activeTool = null; // 'draw' ou 'erase'
-    let isDrawing = false;
-    let activeFileType = null;
-    let isSyncingFromRemote = false;
-    let isLoggedIn = false;
-    let pendingEmoji = null;
+    <!-- ÁREA DE JOGO (CANVAS) -->
+    <main class="relative w-full max-w-5xl flex-1 flex items-center justify-center min-h-[450px]">
+        <canvas id="gameCanvas" class="w-full h-full rounded-xl border border-slate-800 cursor-crosshair"></canvas>
 
-    // --- CONTROLE DE PAN & ZOOM ---
-    let scale = 1;
-    let panX = 0;
-    let panY = 0;
-    let startDist = 0;
-    let startScale = 1;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isPanning = false;
+        <!-- OVERLAY DE BUSCA DE PARTIDA / LOBBY PREMIER (ESTILO CS2) -->
+        <div id="matchmakingOverlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-25 text-center">
+            <div class="relative mb-6">
+                <div class="w-20 h-20 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin flex items-center justify-center"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fa-solid fa-crosshairs text-amber-400 text-2xl animate-pulse"></i>
+                </div>
+            </div>
+            
+            <h2 class="text-2xl font-black text-white tracking-wider uppercase mb-1">PROCURANDO PARTIDA ONLINE</h2>
+            <p id="queue-mode-text" class="text-amber-400 font-bold text-sm mb-4">Modo: 1 x 1 (Necessário 2 Jogadores)</p>
 
-    function applyTransform() {
-      zoomContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    }
+            <div class="bg-slate-900 border border-slate-800 px-6 py-4 rounded-xl mb-6 min-w-[280px]">
+                <div class="text-xs text-slate-400 font-bold uppercase mb-2">Jogadores Conectados na Sala</div>
+                <div class="text-3xl font-black text-emerald-400 tracking-wider">
+                    <span id="connected-count">1</span> / <span id="required-count">2</span>
+                </div>
+                <!-- Lista dos nicks dos jogadores no lobby -->
+                <div id="lobby-players-list" class="mt-3 text-xs text-slate-300 flex flex-wrap justify-center gap-2">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
 
-    window.resetZoom = function() {
-      scale = 1;
-      panX = 0;
-      panY = 0;
-      applyTransform();
-    };
+            <button onclick="cancelMatchmaking()" class="px-6 py-2.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-bold text-sm rounded-lg transition">
+                Cancelar Busca
+            </button>
+        </div>
 
-    function getDistance(t1, t2) {
-      return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-    }
+        <!-- Overlay de Seleção / Loja de Veículos -->
+        <div id="vehicleSelectOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-4 sm:p-6 z-30">
+            <div class="flex items-center justify-between w-full max-w-4xl mb-4">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-black text-emerald-400 tracking-wide">GARAGEM MILITAR</h2>
+                    <p class="text-xs text-slate-400">Compre unidades mais poderosas com o saldo de suas vitórias!</p>
+                </div>
+                <div class="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
+                    <span id="shop-money" class="text-lg font-black text-amber-400">$0</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl mb-6 overflow-y-auto max-h-[65vh] p-1">
+                <!-- Blindado (Grátis) -->
+                <div onclick="selectVehicleType('humvee')" id="card-humvee" class="vehicle-card selected bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex justify-between items-center text-[10px]">
+                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded font-bold">DESBLOQUEADO</span>
+                    </div>
+                    <i class="fa-solid fa-truck-pickup text-3xl text-emerald-400 my-2"></i>
+                    <h3 class="font-bold text-sm text-slate-200">Blindado Tático</h3>
+                    <div class="w-full mt-2 text-[10px] space-y-1 text-slate-400 text-left bg-slate-950/60 p-2 rounded-lg">
+                        <div>Vida: <span class="text-emerald-400">100 HP</span></div>
+                        <div>Dano: <span class="text-amber-400">20 DMG</span></div>
+                        <div>Recarga: <span class="text-sky-400">0.35s</span></div>
+                        <div>Especial: <span class="text-sky-300">Escudo 5s</span></div>
+                    </div>
+                    <button id="btn-buy-humvee" class="w-full mt-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg">Selecionar</button>
+                </div>
 
-    viewport.addEventListener('touchstart', (e) => {
-      // Se tiver desenhando ou tocando em um card/item, ignora o pan da tela inteira
-      if (e.target.closest('.item') || (activeTool && e.touches.length === 1)) return;
+                <!-- Tanque ($20,000) -->
+                <div onclick="selectVehicleType('tank')" id="card-tank" class="vehicle-card bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex justify-between items-center text-[10px]">
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded font-bold">$20.000</span>
+                    </div>
+                    <i class="fa-solid fa-shield-cat text-3xl text-amber-500 my-2"></i>
+                    <h3 class="font-bold text-sm text-slate-200">Tanque Pesado</h3>
+                    <div class="w-full mt-2 text-[10px] space-y-1 text-slate-400 text-left bg-slate-950/60 p-2 rounded-lg">
+                        <div>Vida: <span class="text-emerald-400">240 HP</span></div>
+                        <div>Dano: <span class="text-amber-400">65 DMG</span></div>
+                        <div>Recarga: <span class="text-sky-400">0.90s</span></div>
+                        <div>Especial: <span class="text-amber-300">5 Mísseis</span></div>
+                    </div>
+                    <button id="btn-buy-tank" class="w-full mt-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg">Comprar</button>
+                </div>
 
-      if (e.touches.length === 2) {
-        startDist = getDistance(e.touches[0], e.touches[1]);
-        startScale = scale;
-      } else if (e.touches.length === 1) {
-        isPanning = true;
-        touchStartX = e.touches[0].clientX - panX;
-        touchStartY = e.touches[0].clientY - panY;
-      }
-    }, { passive: false });
+                <!-- Helicóptero ($80,000) -->
+                <div onclick="selectVehicleType('helicopter')" id="card-helicopter" class="vehicle-card bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex justify-between items-center text-[10px]">
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded font-bold">$80.000</span>
+                    </div>
+                    <i class="fa-solid fa-helicopter text-3xl text-sky-400 my-2"></i>
+                    <h3 class="font-bold text-sm text-slate-200">Helicóptero</h3>
+                    <div class="w-full mt-2 text-[10px] space-y-1 text-slate-400 text-left bg-slate-950/60 p-2 rounded-lg">
+                        <div>Vida: <span class="text-emerald-400">120 HP</span></div>
+                        <div>Dano: <span class="text-amber-400">18x5 DMG</span></div>
+                        <div>Recarga: <span class="text-sky-400">1.00s</span></div>
+                        <div>Especial: <span class="text-sky-300">2 Guiados</span></div>
+                    </div>
+                    <button id="btn-buy-helicopter" class="w-full mt-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg">Comprar</button>
+                </div>
 
-    viewport.addEventListener('touchmove', (e) => {
-      if (e.target.closest('.item') || (activeTool && e.touches.length === 1)) return;
+                <!-- Caminhão ($200,000) -->
+                <div onclick="selectVehicleType('rocket')" id="card-rocket" class="vehicle-card bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex justify-between items-center text-[10px]">
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded font-bold">$200.000</span>
+                    </div>
+                    <i class="fa-solid fa-truck-front text-3xl text-rose-400 my-2"></i>
+                    <h3 class="font-bold text-sm text-slate-200">Caminhão Rocket</h3>
+                    <div class="w-full mt-2 text-[10px] space-y-1 text-slate-400 text-left bg-slate-950/60 p-2 rounded-lg">
+                        <div>Vida: <span class="text-emerald-400">160 HP</span></div>
+                        <div>Dano: <span class="text-amber-400">35x2 DMG</span></div>
+                        <div>Recarga: <span class="text-sky-400">0.55s</span></div>
+                        <div>Especial: <span class="text-rose-300">10 Foguetes</span></div>
+                    </div>
+                    <button id="btn-buy-rocket" class="w-full mt-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg">Comprar</button>
+                </div>
 
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dist = getDistance(e.touches[0], e.touches[1]);
-        if (startDist > 0) {
-          scale = Math.min(Math.max(0.5, startScale * (dist / startDist)), 3);
-          applyTransform();
-        }
-      } else if (e.touches.length === 1 && isPanning) {
-        e.preventDefault();
-        panX = e.touches[0].clientX - touchStartX;
-        panY = e.touches[0].clientY - touchStartY;
-        applyTransform();
-      }
-    }, { passive: false });
+                <!-- Caça ($800,000) -->
+                <div onclick="selectVehicleType('jet')" id="card-jet" class="vehicle-card bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex justify-between items-center text-[10px]">
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded font-bold">$800.000</span>
+                    </div>
+                    <i class="fa-solid fa-plane-up text-3xl text-indigo-400 my-2"></i>
+                    <h3 class="font-bold text-sm text-slate-200">Caça de Guerra</h3>
+                    <div class="w-full mt-2 text-[10px] space-y-1 text-slate-400 text-left bg-slate-950/60 p-2 rounded-lg">
+                        <div>Vida: <span class="text-emerald-400">110 HP</span></div>
+                        <div>Dano: <span class="text-amber-400">75 DMG</span></div>
+                        <div>Fogo Ground: <span class="text-rose-400">Chamas 4s</span></div>
+                        <div>Especial: <span class="text-indigo-300">5 Bombas Area</span></div>
+                    </div>
+                    <button id="btn-buy-jet" class="w-full mt-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg">Comprar</button>
+                </div>
+            </div>
 
-    viewport.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) startDist = 0;
-      if (e.touches.length === 0) isPanning = false;
-    });
+            <button onclick="startGameWithVehicle()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 text-lg uppercase tracking-wider">
+                PROCURAR PARTIDA <i class="fa-solid fa-magnifying-glass ml-2 text-sm"></i>
+            </button>
+        </div>
 
-    // --- SESSÃO E LOGIN ---
-    window.checkLogin = function() {
-      const u = document.getElementById('login-user').value.trim();
-      const p = document.getElementById('login-pass').value.trim();
-      const err = document.getElementById('login-error');
+        <!-- Overlay de Fim de Jogo com Recompensas -->
+        <div id="gameOverOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-20">
+            <h2 id="winnerText" class="text-4xl font-extrabold mb-1 tracking-wide">TIME VERDE VENCEU!</h2>
+            <p id="winnerSubtext" class="text-slate-400 mb-4">Todos os veículos inimigos foram destruídos.</p>
+            
+            <div id="rewards-panel" class="bg-slate-900 border border-slate-800 rounded-xl p-4 w-full max-w-sm mb-6 space-y-2 text-sm">
+                <div class="flex justify-between text-slate-300">
+                    <span>Resultado do Rating (CS):</span>
+                    <span id="reward-rating-change" class="font-black text-emerald-400">+220 PTS</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Abates (<span id="reward-kills-count">0</span>):</span>
+                    <span id="reward-kills-money" class="text-amber-400 font-bold">+$0</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Bônus de Participação:</span>
+                    <span class="text-amber-400 font-bold">+$500</span>
+                </div>
+                <div id="reward-win-row" class="flex justify-between text-slate-300 border-t border-slate-800 pt-2">
+                    <span>Bônus de Vitória:</span>
+                    <span id="reward-win-money" class="text-amber-400 font-bold">+$10.000</span>
+                </div>
+                <div class="flex justify-between text-base font-black border-t border-slate-700 pt-2 text-white">
+                    <span>Total Ganho:</span>
+                    <span id="reward-total" class="text-emerald-400">+$10.500</span>
+                </div>
+            </div>
 
-      if (u === "Raposa" && p === "capitao21") {
-        loginSuccess("Capitão");
-      } else if (u === "Raposinha" && p === "dinos") {
-        loginSuccess("Lidia");
-      } else {
-        err.style.display = "block";
-      }
-    };
+            <div class="flex gap-4">
+                <button onclick="showVehicleSelection()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 font-bold text-slate-200 rounded-lg transition border border-slate-700">
+                    Garagem / Loja
+                </button>
+                <button onclick="startMatchmaking()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
+                    Buscar Nova Partida
+                </button>
+            </div>
+        </div>
+    </main>
 
-    function loginSuccess(displayName) {
-      isLoggedIn = true;
-      sessionStorage.setItem('current_user', displayName);
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('toolbar').style.display = 'flex';
-      document.getElementById('user-display').innerText = displayName;
+    <!-- FIREBASE INITIALIZATION & MULTIPLAYER MATCHMAKING LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-      if (pendingEmoji) {
-        triggerEmojiRain(pendingEmoji);
-        pendingEmoji = null;
-      }
-    }
-
-    const savedUser = sessionStorage.getItem('current_user');
-    if (savedUser) {
-      loginSuccess(savedUser);
-    }
-
-    // --- CANVAS & DESENHO / BORRACHA ---
-    function resizeCanvas() {
-      canvas.width = 3000;
-      canvas.height = 3000;
-    }
-    resizeCanvas();
-
-    window.setMode = function(mode) {
-      const drawBtn = document.getElementById('draw-toggle');
-      const eraseBtn = document.getElementById('erase-toggle');
-
-      if (activeTool === mode) {
-        activeTool = null;
-        canvas.classList.remove('drawing-active');
-        drawBtn.classList.remove('active');
-        eraseBtn.classList.remove('active');
-      } else {
-        activeTool = mode;
-        canvas.classList.add('drawing-active');
-        drawBtn.classList.toggle('active', mode === 'draw');
-        eraseBtn.classList.toggle('active', mode === 'erase');
-      }
-    };
-
-    function getCanvasPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (clientX - rect.left) / scale,
-        y: (clientY - rect.top) / scale
-      };
-    }
-
-    function startDrawing(e) {
-      if (!activeTool || (e.touches && e.touches.length > 1)) return;
-      isDrawing = true;
-      const pos = getCanvasPos(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    }
-
-    function draw(e) {
-      if (!isDrawing || !activeTool || (e.touches && e.touches.length > 1)) return;
-      e.preventDefault();
-      const pos = getCanvasPos(e);
-
-      ctx.lineTo(pos.x, pos.y);
-
-      if (activeTool === 'draw') {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = '#f472b6';
-        ctx.lineWidth = 4 / scale;
-      } else if (activeTool === 'erase') {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 26 / scale;
-      }
-
-      ctx.lineCap = 'round';
-      ctx.stroke();
-    }
-
-    function stopDrawing() {
-      if (isDrawing) {
-        isDrawing = false;
-        saveCanvasToFirebase();
-      }
-    }
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
-    canvas.addEventListener('touchend', stopDrawing);
-
-    function saveCanvasToFirebase() {
-      const dataUrl = canvas.toDataURL();
-      set(drawingRef, dataUrl);
-    }
-
-    window.clearCanvas = function() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      set(drawingRef, null);
-    };
-
-    onValue(drawingRef, (snapshot) => {
-      const data = snapshot.val();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (data) {
-        const img = new Image();
-        img.src = data;
-        img.onload = () => {
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.drawImage(img, 0, 0);
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLZ-lOJ9V750N_hFPEFBWEwd0xXVzGKSs",
+            authDomain: "nord-dba5d.firebaseapp.com",
+            databaseURL: "https://nord-dba5d-default-rtdb.firebaseio.com",
+            projectId: "nord-dba5d",
+            storageBucket: "nord-dba5d.firebasestorage.app",
+            messagingSenderId: "473231525493",
+            appId: "1:473231525493:web:2def50deed039d6eea5a3c"
         };
-      }
-    });
 
-    // --- EMOJI RAIN ESPECIAL ---
-    window.sendEmojiRain = function() {
-      const emoji = prompt("Qual emoji você quer enviar?", "❤️");
-      if (emoji && emoji.trim() !== "") {
-        set(emojiRef, {
-          emoji: emoji.trim(),
-          timestamp: Date.now()
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'armored-clash-cs';
+        let currentUserData = null;
+        let currentUserId = null;
+
+        let currentRoomId = null;
+        let roomUnsubscribe = null;
+        let isHost = false;
+
+        async function initAuth() {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+            currentUserId = auth.currentUser ? auth.currentUser.uid : crypto.randomUUID();
+        }
+        initAuth();
+
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            if (!username || !password) return;
+
+            errorDiv.classList.add('hidden');
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            submitBtn.innerText = "Conectando...";
+            submitBtn.disabled = true;
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', username.toLowerCase());
+                const userSnap = await getDoc(userDocRef);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    if (data.password === password) {
+                        currentUserData = data;
+                    } else {
+                        errorDiv.innerText = "Senha incorreta para este Nick!";
+                        errorDiv.classList.remove('hidden');
+                        submitBtn.innerText = "Entrar na Arena";
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                } else {
+                    currentUserData = {
+                        username: username,
+                        password: password,
+                        rating: 1000,
+                        money: 1500,
+                        unlockedVehicles: ['humvee'],
+                        uid: currentUserId
+                    };
+                    await setDoc(userDocRef, currentUserData);
+                }
+
+                window.playerMoney = currentUserData.money;
+                window.unlockedVehicles = currentUserData.unlockedVehicles || ['humvee'];
+                document.getElementById('player-username').innerText = currentUserData.username;
+                document.getElementById('player-rating').innerText = `${currentUserData.rating.toLocaleString()} PTS`;
+                
+                document.getElementById('loginOverlay').classList.add('hidden');
+                window.updateMoneyUI();
+            } catch (err) {
+                console.error(err);
+                errorDiv.innerText = "Erro ao autenticar. Tente novamente!";
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.innerText = "Entrar na Arena";
+                submitBtn.disabled = false;
+            }
+        };
+
+        window.saveUserData = async function(ratingDelta, moneyDelta) {
+            if (!currentUserData) return;
+            currentUserData.rating = Math.max(0, currentUserData.rating + ratingDelta);
+            currentUserData.money = Math.max(0, currentUserData.money + moneyDelta);
+            currentUserData.unlockedVehicles = window.unlockedVehicles;
+
+            document.getElementById('player-rating').innerText = `${currentUserData.rating.toLocaleString()} PTS`;
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUserData.username.toLowerCase());
+                await updateDoc(userDocRef, {
+                    rating: currentUserData.rating,
+                    money: currentUserData.money,
+                    unlockedVehicles: currentUserData.unlockedVehicles
+                });
+            } catch(e) {
+                console.error("Erro ao salvar progresso:", e);
+            }
+        };
+
+        window.toggleLeaderboard = async function(show) {
+            const modal = document.getElementById('leaderboardOverlay');
+            if (show) {
+                modal.classList.remove('hidden');
+                const list = document.getElementById('leaderboardList');
+                list.innerHTML = `<div class="text-center py-6 text-slate-400 font-bold">Carregando Leaderboard...</div>`;
+
+                try {
+                    const querySnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
+                    const users = [];
+                    querySnap.forEach(d => users.push(d.data()));
+                    users.sort((a, b) => b.rating - a.rating);
+
+                    list.innerHTML = users.map((u, i) => `
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 text-center font-black ${i === 0 ? 'text-amber-400 text-base' : (i===1?'text-slate-300':(i===2?'text-amber-600':'text-slate-500'))}">#${i+1}</span>
+                                <span class="font-bold text-sm text-white">${u.username}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded text-xs font-black text-slate-950 cs-rating-badge">${(u.rating||1000).toLocaleString()} PTS</span>
+                        </div>
+                    `).join('');
+                } catch(err) {
+                    list.innerHTML = `<div class="text-center py-6 text-rose-500 font-bold">Erro ao carregar lista.</div>`;
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        };
+
+        // --- SISTEMA DE MATCHMAKING EM TEMPO REAL NO FIRESTORE ---
+        window.startMatchmaking = async function() {
+            if (!currentUserData) return;
+
+            const mode = window.selectedMode || 1;
+            const requiredCount = mode * 2; // 1x1 = 2 players, 2x2 = 4, 3x3 = 6, 4x4 = 8, 5x5 = 10
+
+            document.getElementById('matchmakingOverlay').classList.remove('hidden');
+            document.getElementById('queue-mode-text').innerText = `Modo: ${mode} x ${mode} (Necessário ${requiredCount} Jogadores)`;
+            document.getElementById('required-count').innerText = requiredCount;
+            document.getElementById('connected-count').innerText = "1";
+
+            try {
+                // Procurar por salas abertas para o mesmo modo
+                const roomsSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'));
+                let foundRoom = null;
+
+                roomsSnap.forEach(docSnap => {
+                    const roomData = docSnap.data();
+                    if (roomData.mode === mode && roomData.status === 'waiting' && roomData.players.length < requiredCount) {
+                        foundRoom = { id: docSnap.id, ...roomData };
+                    }
+                });
+
+                const myPlayerData = {
+                    id: currentUserId,
+                    username: currentUserData.username,
+                    vehicleType: window.selectedVehicleType,
+                    x: 0, y: 0, angle: 0, hp: 100, alive: true,
+                    lastUpdate: Date.now()
+                };
+
+                if (foundRoom) {
+                    currentRoomId = foundRoom.id;
+                    isHost = false;
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                    
+                    foundRoom.players.push(myPlayerData);
+                    await updateDoc(roomRef, {
+                        players: foundRoom.players
+                    });
+                } else {
+                    currentRoomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+                    isHost = true;
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                    
+                    await setDoc(roomRef, {
+                        mode: mode,
+                        requiredCount: requiredCount,
+                        status: 'waiting',
+                        players: [myPlayerData],
+                        created: Date.now()
+                    });
+                }
+
+                listenToRoom(currentRoomId, requiredCount);
+
+            } catch (e) {
+                console.error("Erro no matchmaking:", e);
+                window.cancelMatchmaking();
+            }
+        };
+
+        function listenToRoom(roomId, requiredCount) {
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const roomData = snapshot.data();
+
+                document.getElementById('connected-count').innerText = roomData.players.length;
+                
+                const list = document.getElementById('lobby-players-list');
+                list.innerHTML = roomData.players.map(p => `
+                    <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded font-bold text-amber-400">
+                        <i class="fa-solid fa-user mr-1 text-[10px]"></i>${p.username}
+                    </span>
+                `).join('');
+
+                // Se a sala completou o total de jogadores necessários
+                if (roomData.players.length >= requiredCount && roomData.status === 'waiting') {
+                    if (isHost) {
+                        updateDoc(roomRef, { status: 'playing' });
+                    }
+                }
+
+                if (roomData.status === 'playing') {
+                    document.getElementById('matchmakingOverlay').classList.add('hidden');
+                    window.startOnlineMatch(roomData);
+                }
+            }, (error) => {
+                console.error("Erro ao escutar sala:", error);
+            });
+        }
+
+        window.cancelMatchmaking = async function() {
+            if (roomUnsubscribe) roomUnsubscribe();
+            if (currentRoomId) {
+                try {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                    const roomSnap = await getDoc(roomRef);
+                    if (roomSnap.exists()) {
+                        const data = roomSnap.data();
+                        const updatedPlayers = data.players.filter(p => p.id !== currentUserId);
+                        if (updatedPlayers.length === 0) {
+                            await deleteDoc(roomRef);
+                        } else {
+                            await updateDoc(roomRef, { players: updatedPlayers });
+                        }
+                    }
+                } catch(e) {}
+            }
+            currentRoomId = null;
+            document.getElementById('matchmakingOverlay').classList.add('hidden');
+        };
+
+        window.syncMyPosition = async function(vehicleData) {
+            if (!currentRoomId) return;
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                const roomSnap = await getDoc(roomRef);
+                if (roomSnap.exists()) {
+                    const players = roomSnap.data().players;
+                    const myIdx = players.findIndex(p => p.id === currentUserId);
+                    if (myIdx !== -1) {
+                        players[myIdx] = { ...players[myIdx], ...vehicleData, lastUpdate: Date.now() };
+                        await updateDoc(roomRef, { players: players });
+                    }
+                }
+            } catch(e) {}
+        };
+    </script>
+
+    <script>
+        // --- CONFIGURAÇÃO E ESTADO GLOBAL DO JOGO ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let selectedMode = 1; 
+        window.selectedMode = 1;
+        let selectedVehicleType = 'humvee';
+        window.selectedVehicleType = 'humvee';
+
+        window.playerMoney = 1500;
+        const vehiclePrices = { humvee: 0, tank: 20000, helicopter: 80000, rocket: 200000, jet: 800000 };
+        window.unlockedVehicles = ['humvee'];
+
+        // SORTEIO CS2 RATING PER MATCH
+        let stakeWin = 220;
+        let stakeLoss = 170;
+
+        let greenKills = 0;
+        let redKills = 0;
+        let matchTimeSeconds = 0;
+        let timerInterval = null;
+
+        let player = null;
+        let vehicles = [];
+        let bullets = [];
+        let particles = [];
+        let obstacles = [];
+        let targetMarkers = [];
+        let fireZones = [];
+
+        let mousePos = { x: 0, y: 0 };
+
+        const keys = {
+            w: false, a: false, s: false, d: false,
+            ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+            Space: false, KeyE: false
+        };
+
+        // --- FUNÇÕES DE MENU EXPOSTAS GLOBALMENTE ---
+        window.selectVehicleType = function(type) {
+            const price = vehiclePrices[type];
+            if (!window.unlockedVehicles.includes(type)) {
+                if (window.playerMoney >= price) {
+                    window.playerMoney -= price;
+                    window.unlockedVehicles.push(type);
+                    if (window.saveUserData) window.saveUserData(0, 0);
+                    selectedVehicleType = type;
+                    window.selectedVehicleType = type;
+                } else {
+                    return;
+                }
+            } else {
+                selectedVehicleType = type;
+                window.selectedVehicleType = type;
+            }
+            
+            document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
+            const card = document.getElementById(`card-${type}`);
+            if (card) card.classList.add('selected');
+            updateMoneyUI();
+        };
+
+        window.showVehicleSelection = function() {
+            document.getElementById('vehicleSelectOverlay').classList.remove('hidden');
+            updateMoneyUI();
+        };
+
+        window.startGameWithVehicle = function() {
+            document.getElementById('vehicleSelectOverlay').classList.add('hidden');
+            if (window.startMatchmaking) window.startMatchmaking();
+        };
+
+        window.setGameMode = function(mode) {
+            selectedMode = mode;
+            window.selectedMode = mode;
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`mode-${i}`);
+                if (btn) {
+                    if (i === mode) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            }
+        };
+
+        window.leaveQueueOrMatch = function() {
+            if (window.cancelMatchmaking) window.cancelMatchmaking();
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            window.showVehicleSelection();
+        };
+
+        function startMatchTimer() {
+            matchTimeSeconds = 0;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                matchTimeSeconds++;
+            }, 1000);
+        }
+
+        window.startOnlineMatch = function(roomData) {
+            vehicles = [];
+            bullets = [];
+            particles = [];
+            targetMarkers = [];
+            fireZones = [];
+
+            const playersList = roomData.players;
+            const half = Math.ceil(playersList.length / 2);
+
+            playersList.forEach((pData, idx) => {
+                const isGreen = idx < half;
+                const team = isGreen ? 'green' : 'red';
+                const teamIdx = isGreen ? idx : (idx - half);
+                const countInTeam = isGreen ? half : (playersList.length - half);
+
+                const startX = isGreen ? 80 : (canvas.width - 80);
+                const startY = (canvas.height / (countInTeam + 1)) * (teamIdx + 1);
+
+                const isMe = pData.username === document.getElementById('player-username').innerText;
+
+                const v = new Vehicle(startX, startY, team, pData.vehicleType || 'humvee', isMe, pData.username);
+                vehicles.push(v);
+
+                if (isMe) player = v;
+            });
+
+            rollMatchStakes();
+            startMatchTimer();
+        };
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawArena();
+
+            bullets.forEach((b, idx) => {
+                b.update();
+                b.draw();
+                if (!b.active) bullets.splice(idx, 1);
+            });
+
+            particles.forEach((p, idx) => {
+                p.update();
+                p.draw();
+                if (p.life <= 0) particles.splice(idx, 1);
+            });
+
+            vehicles.forEach(v => {
+                v.update();
+                v.draw();
+            });
+
+            if (player && player.alive) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+                ctx.fillRect(10, 10, 220, 36);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(10, 10, 220, 36);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.fillText(`HABILIDADE [E]:`, 18, 32);
+
+                if (matchTimeSeconds < 60) {
+                    const remain = 60 - matchTimeSeconds;
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillText(`BLOQUEADA (${remain}s)`, 125, 32);
+                } else if (player.specialCooldown > 0) {
+                    const cdSeconds = Math.ceil(player.specialCooldown / 60);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillText(`RECARGA (${cdSeconds}s)`, 125, 32);
+                } else {
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillText(`PRONTA!`, 125, 32);
+                }
+                ctx.restore();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- CONTROLES WASD ---
+        window.addEventListener('keydown', e => {
+            if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
         });
-      }
-    };
 
-    function triggerEmojiRain(emoji) {
-      for (let i = 0; i < 30; i++) {
-        setTimeout(() => {
-          const el = document.createElement('div');
-          el.className = 'emoji-rain';
-          el.innerText = emoji;
-          el.style.left = Math.random() * 92 + 'vw';
-          el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
-          document.body.appendChild(el);
+        window.addEventListener('keyup', e => {
+            if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
 
-          setTimeout(() => el.remove(), 4000);
-        }, i * 100);
-      }
-    }
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mousePos.x = e.clientX - rect.left;
+            mousePos.y = e.clientY - rect.top;
+        });
 
-    let lastEmojiTime = 0;
-    onValue(emojiRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data && data.timestamp > lastEmojiTime) {
-        lastEmojiTime = data.timestamp;
-        if (isLoggedIn) {
-          triggerEmojiRain(data.emoji);
-        } else {
-          pendingEmoji = data.emoji;
+        canvas.addEventListener('mousedown', e => {
+            if (e.button === 0 && player && player.alive) player.shoot();
+            if (e.button === 2 && player && player.alive) {
+                e.preventDefault();
+                player.useSpecial(mousePos.x, mousePos.y);
+            }
+        });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        function rollMatchStakes() {
+            stakeWin = Math.floor(Math.random() * (320 - 100 + 1)) + 100;
+            stakeLoss = Math.floor(Math.random() * (280 - 100 + 1)) + 100;
+            document.getElementById('stake-win').innerText = `+${stakeWin}`;
+            document.getElementById('stake-loss').innerText = `-${stakeLoss}`;
         }
-      }
-    });
 
-    // --- ARRASTAR E REDIMENSIONAR DE ITENS COM COMPENSAÇÃO DE ZOOM ---
-    function makeInteractive(element) {
-      let posX = 0, posY = 0, initialX = 0, initialY = 0;
-
-      const getPos = (e) => {
-        if (e.touches && e.touches.length > 0) {
-          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        function updateMoneyUI() {
+            document.getElementById('player-money').innerText = `$${window.playerMoney.toLocaleString()}`;
+            document.getElementById('shop-money').innerText = `$${window.playerMoney.toLocaleString()}`;
+            updateShopCardsUI();
         }
-        return { x: e.clientX, y: e.clientY };
-      };
 
-      const dragStart = (e) => {
-        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || 
-            e.target.tagName === 'AUDIO' || e.target.classList.contains('resize-handle')) return;
+        function updateShopCardsUI() {
+            const types = ['humvee', 'tank', 'helicopter', 'rocket', 'jet'];
+            types.forEach(t => {
+                const btn = document.getElementById(`btn-buy-${t}`);
+                if (!btn) return;
 
-        const pos = getPos(e);
-        initialX = pos.x;
-        initialY = pos.y;
+                if (window.unlockedVehicles.includes(t)) {
+                    if (selectedVehicleType === t) {
+                        btn.innerText = "Selecionado";
+                        btn.className = "w-full mt-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg cursor-default";
+                    } else {
+                        btn.innerText = "Selecionar";
+                        btn.className = "w-full mt-3 py-1.5 text-xs font-bold bg-slate-700 hover:bg-slate-600 text-white rounded-lg";
+                    }
+                } else {
+                    btn.innerText = `Comprar ($${vehiclePrices[t].toLocaleString()})`;
+                    btn.className = "w-full mt-3 py-1.5 text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white rounded-lg";
+                }
+            });
+        }
 
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-        document.addEventListener('touchmove', dragMove, { passive: false });
-        document.addEventListener('touchend', dragEnd);
-      };
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth || 900;
+            canvas.height = container.clientHeight || 500;
+            initObstacles();
+        }
+        window.addEventListener('resize', resizeCanvas);
 
-      const dragMove = (e) => {
-        const pos = getPos(e);
-        posX = (initialX - pos.x) / scale;
-        posY = (initialY - pos.y) / scale;
-        initialX = pos.x;
-        initialY = pos.y;
+        function initObstacles() {
+            const w = canvas.width;
+            const h = canvas.height;
+            obstacles = [
+                { x: w * 0.25, y: h * 0.2, w: w * 0.1, h: h * 0.25 },
+                { x: w * 0.65, y: h * 0.55, w: w * 0.1, h: h * 0.25 },
+                { x: w * 0.45, y: h * 0.4, w: w * 0.1, h: h * 0.2 }
+            ];
+        }
 
-        element.style.top = (element.offsetTop - posY) + "px";
-        element.style.left = (element.offsetLeft - posX) + "px";
-      };
+        function drawArena() {
+            ctx.fillStyle = '#1e251b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const dragEnd = () => {
-        document.removeEventListener('mousemove', dragMove);
-        document.removeEventListener('mouseup', dragEnd);
-        document.removeEventListener('touchmove', dragMove);
-        document.removeEventListener('touchend', dragEnd);
-        saveItemsToFirebase();
-      };
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
 
-      element.addEventListener('mousedown', dragStart);
-      element.addEventListener('touchstart', dragStart, { passive: false });
+            obstacles.forEach(obs => {
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(obs.x + 4, obs.y + 4, obs.w - 8, obs.h - 8);
+            });
 
-      // Redimensionamento com ajuste de escala
-      const resizeHandle = element.querySelector('.resize-handle');
-      if (resizeHandle) {
-        const resizeStart = (e) => {
-          e.stopPropagation();
-          const pos = getPos(e);
-          let startW = element.offsetWidth;
-          let startH = element.offsetHeight;
-          let startX = pos.x;
-          let startY = pos.y;
+            fireZones.forEach((fz, idx) => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(fz.x, fz.y, fz.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+                ctx.fill();
+                ctx.strokeStyle = '#f97316';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 6]);
+                ctx.stroke();
+                ctx.restore();
 
-          const resizeMove = (e) => {
-            const p = getPos(e);
-            let newW = startW + (p.x - startX) / scale;
-            let newH = startH + (p.y - startY) / scale;
-            if (newW > 110) element.style.width = newW + 'px';
-            if (newH > 70) element.style.height = newH + 'px';
-          };
+                if (Math.random() < 0.6) {
+                    particles.push(new Particle(
+                        fz.x + (Math.random() - 0.5) * fz.radius * 1.5,
+                        fz.y + (Math.random() - 0.5) * fz.radius * 1.5,
+                        (Math.random() - 0.5) * 1,
+                        -Math.random() * 2 - 1,
+                        ['#ef4444', '#f97316', '#fbbf24'][Math.floor(Math.random()*3)],
+                        Math.random() * 4 + 2, 25
+                    ));
+                }
 
-          const resizeEnd = () => {
-            document.removeEventListener('mousemove', resizeMove);
-            document.removeEventListener('mouseup', resizeEnd);
-            document.removeEventListener('touchmove', resizeMove);
-            document.removeEventListener('touchend', resizeEnd);
-            saveItemsToFirebase();
-          };
+                vehicles.forEach(v => {
+                    if (v.alive) {
+                        const dist = Math.hypot(v.x - fz.x, v.y - fz.y);
+                        if (dist < fz.radius + v.width/3) {
+                            v.takeDamage(0.35);
+                        }
+                    }
+                });
 
-          document.addEventListener('mousemove', resizeMove);
-          document.addEventListener('mouseup', resizeEnd);
-          document.addEventListener('touchmove', resizeMove, { passive: false });
-          document.addEventListener('touchend', resizeEnd);
+                fz.duration--;
+                if (fz.duration <= 0) fireZones.splice(idx, 1);
+            });
+
+            targetMarkers.forEach((m, idx) => {
+                ctx.save();
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(m.x - m.radius - 5, m.y); ctx.lineTo(m.x + m.radius + 5, m.y);
+                ctx.moveTo(m.x, m.y - m.radius - 5); ctx.lineTo(m.x, m.y + m.radius + 5);
+                ctx.stroke();
+                ctx.restore();
+
+                m.timer--;
+                if(m.timer <= 0) {
+                    bullets.push(new Bullet(m.x, m.y, 0, m.team, 60, 'bomb_detonate'));
+                    targetMarkers.splice(idx, 1);
+                }
+            });
+        }
+
+        class Particle {
+            constructor(x, y, vx, vy, color, size, life) {
+                this.x = x; this.y = y;
+                this.vx = vx; this.vy = vy;
+                this.color = color; this.size = size;
+                this.life = life; this.maxLife = life;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life--; }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Vehicle {
+            constructor(x, y, team, type = 'humvee', isPlayer = false, username = 'Player') {
+                this.x = x; this.y = y;
+                this.team = team; this.type = type; this.isPlayer = isPlayer;
+                this.username = username;
+                this.angle = team === 'green' ? 0 : Math.PI;
+                this.speed = 0; this.alive = true;
+                this.cooldown = 0; this.specialCooldown = 0; this.shieldTime = 0;
+                this.color = team === 'green' ? '#22c55e' : '#ef4444';
+                this.darkColor = team === 'green' ? '#14532d' : '#7f1d1d';
+                this.setupAttributes();
+            }
+
+            setupAttributes() {
+                this.isAir = false;
+                switch (this.type) {
+                    case 'tank':
+                        this.width = 54; this.height = 36;
+                        this.maxHp = 240; this.hp = 240;
+                        this.maxSpeed = 2.4; this.turnSpeed = 0.05;
+                        this.fireRate = 55; this.damage = 65;
+                        break;
+                    case 'helicopter':
+                        this.width = 44; this.height = 24;
+                        this.maxHp = 120; this.hp = 120;
+                        this.maxSpeed = 3.6; this.turnSpeed = 0.07;
+                        this.fireRate = 60; this.damage = 18;
+                        this.isAir = true; this.rotorAngle = 0;
+                        break;
+                    case 'jet':
+                        this.width = 50; this.height = 32;
+                        this.maxHp = 110; this.hp = 110;
+                        this.maxSpeed = 4.8; this.turnSpeed = 0.075;
+                        this.fireRate = 40; this.damage = 75;
+                        this.isAir = true;
+                        break;
+                    case 'rocket':
+                        this.width = 48; this.height = 30;
+                        this.maxHp = 160; this.hp = 160;
+                        this.maxSpeed = 2.8; this.turnSpeed = 0.06;
+                        this.fireRate = 33; this.damage = 35;
+                        break;
+                    case 'humvee':
+                    default:
+                        this.width = 44; this.height = 28;
+                        this.maxHp = 100; this.hp = 100;
+                        this.maxSpeed = 3.2; this.turnSpeed = 0.06;
+                        this.fireRate = 20; this.damage = 20;
+                        break;
+                }
+            }
+
+            update() {
+                if (!this.alive) return;
+
+                if (this.cooldown > 0) this.cooldown--;
+                if (this.specialCooldown > 0) this.specialCooldown--;
+                if (this.shieldTime > 0) this.shieldTime--;
+
+                if (this.type === 'helicopter') this.rotorAngle += 0.45;
+
+                if (this.isPlayer) {
+                    this.handlePlayerInput();
+                }
+
+                if (this.type === 'jet' && Math.abs(this.speed) < 2.0) {
+                    this.speed = 2.2;
+                }
+
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+
+                this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
+                this.y = Math.max(this.height/2, Math.min(canvas.height - this.height/2, this.y));
+
+                if (!this.isAir) {
+                    obstacles.forEach(obs => {
+                        if (this.checkObstacleCollision(obs)) {
+                            this.x -= Math.cos(this.angle) * this.speed * 1.2;
+                            this.y -= Math.sin(this.angle) * this.speed * 1.2;
+                            this.speed = -this.speed * 0.5;
+                        }
+                    });
+                }
+
+                this.speed *= 0.92;
+            }
+
+            handlePlayerInput() {
+                if (keys.a || keys.ArrowLeft) this.angle -= this.turnSpeed;
+                if (keys.d || keys.ArrowRight) this.angle += this.turnSpeed;
+
+                if (keys.w || keys.ArrowUp) this.speed = Math.min(this.speed + 0.3, this.maxSpeed);
+                if (keys.s || keys.ArrowDown) this.speed = Math.max(this.speed - 0.22, -this.maxSpeed * 0.5);
+
+                if (keys.Space) this.shoot();
+                if (keys.KeyE) this.useSpecial();
+            }
+
+            checkObstacleCollision(obs) {
+                return (
+                    this.x + this.width/2 > obs.x &&
+                    this.x - this.width/2 < obs.x + obs.w &&
+                    this.y + this.height/2 > obs.y &&
+                    this.y - this.height/2 < obs.y + obs.h
+                );
+            }
+
+            shoot() {
+                if (this.cooldown > 0 || !this.alive) return;
+                const turretLength = this.width / 2 + 4;
+                const frontX = this.x + Math.cos(this.angle) * turretLength;
+                const frontY = this.y + Math.sin(this.angle) * turretLength;
+
+                if (this.type === 'tank') {
+                    bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'tank_missile', 320));
+                    this.cooldown = this.fireRate;
+                } else if (this.type === 'helicopter') {
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            if (!this.alive) return;
+                            const spread = (i - 2) * 0.07;
+                            bullets.push(new Bullet(this.x, this.y, this.angle + spread, this.team, this.damage, 'mg_bullet'));
+                        }, i * 50);
+                    }
+                    this.cooldown = this.fireRate;
+                } else if (this.type === 'jet') {
+                    const launchX = this.x + Math.cos(this.angle) * 30;
+                    const launchY = this.y + Math.sin(this.angle) * 30;
+                    bullets.push(new Bullet(launchX, launchY, this.angle, this.team, this.damage, 'gravity_bomb', 0, this.speed + 2));
+                    this.cooldown = this.fireRate;
+                } else if (this.type === 'rocket') {
+                    const sideOffset = 8;
+                    const bX1 = this.x + Math.cos(this.angle) * turretLength + Math.cos(this.angle + Math.PI/2) * sideOffset;
+                    const bY1 = this.y + Math.sin(this.angle) * turretLength + Math.sin(this.angle + Math.PI/2) * sideOffset;
+                    const bX2 = this.x + Math.cos(this.angle) * turretLength + Math.cos(this.angle - Math.PI/2) * sideOffset;
+                    const bY2 = this.y + Math.sin(this.angle) * turretLength + Math.sin(this.angle - Math.PI/2) * sideOffset;
+
+                    bullets.push(new Bullet(bX1, bY1, this.angle, this.team, this.damage, 'rocket'));
+                    bullets.push(new Bullet(bX2, bY2, this.angle, this.team, this.damage, 'rocket'));
+                    this.cooldown = this.fireRate;
+                } else {
+                    bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'standard'));
+                    this.cooldown = this.fireRate;
+                }
+            }
+
+            useSpecial(targetX = null, targetY = null) {
+                if (matchTimeSeconds < 60 || this.specialCooldown > 0 || !this.alive) return;
+                this.specialCooldown = 600;
+
+                if (this.type === 'humvee') {
+                    this.shieldTime = 300;
+                } else if (this.type === 'tank') {
+                    for (let i = -2; i <= 2; i++) {
+                        const spreadAngle = this.angle + (i * 0.15);
+                        bullets.push(new Bullet(this.x, this.y, spreadAngle, this.team, 50, 'tank_missile', 360));
+                    }
+                } else if (this.type === 'helicopter') {
+                    const enemy = vehicles.find(v => v.team !== this.team && v.alive);
+                    bullets.push(new Bullet(this.x, this.y - 10, this.angle - 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
+                    bullets.push(new Bullet(this.x, this.y + 10, this.angle + 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
+                } else if (this.type === 'jet') {
+                    const tx = targetX !== null ? targetX : mousePos.x;
+                    const ty = targetY !== null ? targetY : mousePos.y;
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            targetMarkers.push({
+                                x: tx + (Math.random() - 0.5) * 90,
+                                y: ty + (Math.random() - 0.5) * 90,
+                                radius: 45, timer: 40, team: this.team
+                            });
+                        }, i * 140);
+                    }
+                } else if (this.type === 'rocket') {
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            if (!this.alive) return;
+                            const sideOffset = 12;
+                            const bX1 = this.x + Math.cos(this.angle + Math.PI/2) * sideOffset;
+                            const bY1 = this.y + Math.sin(this.angle + Math.PI/2) * sideOffset;
+                            const bX2 = this.x + Math.cos(this.angle - Math.PI/2) * sideOffset;
+                            const bY2 = this.y + Math.sin(this.angle - Math.PI/2) * sideOffset;
+
+                            bullets.push(new Bullet(bX1, bY1, this.angle + (Math.random()-0.5)*0.2, this.team, 35, 'rocket'));
+                            bullets.push(new Bullet(bX2, bY2, this.angle + (Math.random()-0.5)*0.2, this.team, 35, 'rocket'));
+                        }, i * 90);
+                    }
+                }
+            }
+
+            takeDamage(amount) {
+                if (this.shieldTime > 0) return;
+                this.hp -= amount;
+                if (this.hp <= 0 && this.alive) {
+                    this.hp = 0;
+                    this.alive = false;
+                    this.explode();
+                    if (this.team === 'green') redKills++;
+                    else greenKills++;
+                    checkGameOver();
+                }
+            }
+
+            explode() {
+                for (let i = 0; i < 35; i++) {
+                    const color = ['#ef4444', '#f97316', '#eab308', '#475569'][Math.floor(Math.random() * 4)];
+                    particles.push(new Particle(
+                        this.x + (Math.random()-0.5)*20, this.y + (Math.random()-0.5)*20,
+                        (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6,
+                        color, Math.random() * 6 + 3, 35
+                    ));
+                }
+            }
+
+            draw() {
+                if (!this.alive) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                if (this.shieldTime > 0) {
+                    ctx.save();
+                    ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'; ctx.fill();
+                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.restore();
+                }
+
+                ctx.rotate(this.angle);
+
+                if (this.isAir) {
+                    ctx.save();
+                    ctx.translate(-6, 12);
+                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                    ctx.beginPath(); ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                }
+
+                if (this.type === 'tank') {
+                    ctx.fillStyle = '#0f172a'; ctx.fillRect(-22, -15, 44, 7); ctx.fillRect(-22, 8, 44, 7);
+                    ctx.fillStyle = this.color; ctx.fillRect(-20, -11, 40, 22);
+                    ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -11, 40, 22);
+                    ctx.fillStyle = this.darkColor; ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = '#0f172a'; ctx.fillRect(5, -3.5, 24, 7);
+                } else if (this.type === 'helicopter') {
+                    ctx.fillStyle = this.color; ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+                    ctx.fillStyle = this.darkColor; ctx.fillRect(-24, -3, 12, 6);
+                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(8, 0, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.save(); ctx.rotate(this.rotorAngle); ctx.fillStyle = '#cbd5e1';
+                    ctx.fillRect(-28, -2, 56, 4); ctx.fillRect(-2, -28, 4, 56); ctx.restore();
+                } else if (this.type === 'jet') {
+                    ctx.fillStyle = this.color; ctx.beginPath();
+                    ctx.moveTo(22, 0); ctx.lineTo(-6, -16); ctx.lineTo(-14, -14);
+                    ctx.lineTo(-10, -5); ctx.lineTo(-20, -5); ctx.lineTo(-20, 5);
+                    ctx.lineTo(-10, 5); ctx.lineTo(-14, 14); ctx.lineTo(-6, 16);
+                    ctx.closePath(); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+                    ctx.fillStyle = '#38bdf8'; ctx.fillRect(4, -3, 10, 6);
+                } else if (this.type === 'rocket') {
+                    ctx.fillStyle = '#0f172a'; ctx.fillRect(-20, -14, 40, 5); ctx.fillRect(-20, 9, 40, 5);
+                    ctx.fillStyle = this.color; ctx.fillRect(-20, -10, 38, 20);
+                    ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -10, 38, 20);
+                    ctx.fillStyle = '#334155'; ctx.fillRect(-16, -8, 16, 16);
+                    ctx.fillStyle = '#ef4444'; ctx.fillRect(0, -6, 6, 4); ctx.fillRect(0, 2, 6, 4);
+                } else {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath(); ctx.arc(12, 14, 5.5, 0, Math.PI * 2); ctx.arc(12, -14, 5.5, 0, Math.PI * 2);
+                    ctx.arc(-14, 14, 5.5, 0, Math.PI * 2); ctx.arc(-14, -14, 5.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = this.color; ctx.beginPath();
+                    ctx.moveTo(-20, -12); ctx.lineTo(8, -12); ctx.lineTo(20, -6);
+                    ctx.lineTo(20, 6); ctx.lineTo(8, 12); ctx.lineTo(-20, 12);
+                    ctx.closePath(); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+                    ctx.fillStyle = '#1e293b'; ctx.fillRect(-6, -8, 12, 16);
+                    ctx.fillStyle = this.darkColor; ctx.fillRect(-2, -5, 10, 10);
+                    ctx.fillStyle = '#0f172a'; ctx.fillRect(8, -2, 16, 4);
+                }
+
+                ctx.restore();
+
+                // Desenhar Nick sobre o veículo
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.username, this.x, this.y - (this.isAir ? 42 : 34));
+                ctx.restore();
+
+                const barWidth = 36;
+                const barHeight = 4;
+                const barX = this.x - barWidth / 2;
+                const barY = this.y - (this.isAir ? 36 : 28);
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+                const hpPercent = Math.max(0, this.hp / this.maxHp);
+                ctx.fillStyle = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
+                ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, angle, team, damage = 25, type = 'standard', maxDist = 0, initialSpeed = 0, target = null) {
+                this.x = x; this.y = y; this.startX = x; this.startY = y;
+                this.angle = angle; this.team = team;
+                this.radius = type === 'tank_missile' ? 6 : (type === 'gravity_bomb' ? 8 : 3);
+                this.active = true; this.damage = damage; this.type = type;
+                this.maxDist = maxDist; this.target = target;
+
+                if (type === 'gravity_bomb') {
+                    this.vx = Math.cos(angle) * (initialSpeed * 0.95);
+                    this.vy = Math.sin(angle) * (initialSpeed * 0.95);
+                    this.bombTimer = 50;
+                } else {
+                    this.speed = type === 'tank_missile' ? 6.5 : (type === 'homing_missile' ? 5.0 : 8.5);
+                }
+            }
+
+            update() {
+                if (!this.active) return;
+                if (this.type === 'gravity_bomb') {
+                    this.x += this.vx; this.y += this.vy;
+                    this.vx *= 0.97; this.vy *= 0.97; this.bombTimer--;
+                    if (this.bombTimer <= 0) {
+                        this.active = false;
+                        this.createImpactEffect(45);
+                        this.checkAreaDamage(75);
+                        fireZones.push({ x: this.x, y: this.y, radius: 45, duration: 240 });
+                    }
+                } else if (this.type === 'homing_missile') {
+                    if (this.target && this.target.alive) {
+                        const targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                        let diff = targetAngle - this.angle;
+                        while (diff < -Math.PI) diff += Math.PI * 2;
+                        while (diff > Math.PI) diff -= Math.PI * 2;
+                        this.angle += Math.sign(diff) * Math.min(Math.abs(diff), 0.08);
+                    }
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed;
+                } else if (this.type === 'bomb_detonate') {
+                    this.active = false;
+                    this.createImpactEffect(50);
+                    this.checkAreaDamage(85);
+                    fireZones.push({ x: this.x, y: this.y, radius: 50, duration: 240 });
+                    return;
+                } else {
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed;
+                    if (this.maxDist > 0) {
+                        const distMoved = Math.hypot(this.x - this.startX, this.y - this.startY);
+                        if (distMoved >= this.maxDist) {
+                            this.active = false;
+                            this.createImpactEffect(30);
+                            this.checkAreaDamage(55);
+                            return;
+                        }
+                    }
+                }
+
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.active = false; return;
+                }
+
+                if (this.type !== 'gravity_bomb') {
+                    obstacles.forEach(obs => {
+                        if (this.x > obs.x && this.x < obs.x + obs.w && this.y > obs.y && this.y < obs.y + obs.h) {
+                            this.active = false;
+                            this.createImpactEffect(25);
+                            if (this.type === 'tank_missile' || this.type === 'homing_missile' || this.type === 'rocket') {
+                                this.checkAreaDamage(55);
+                            }
+                        }
+                    });
+                }
+
+                vehicles.forEach(v => {
+                    if (v.alive && v.team !== this.team) {
+                        const dist = Math.hypot(v.x - this.x, v.y - this.y);
+                        if (dist < v.width / 2) {
+                            v.takeDamage(this.damage);
+                            this.active = false;
+                            this.createImpactEffect(30);
+                            if (this.type === 'tank_missile' || this.type === 'homing_missile' || this.type === 'rocket') {
+                                this.checkAreaDamage(60);
+                            }
+                        }
+                    }
+                });
+            }
+
+            checkAreaDamage(radius) {
+                vehicles.forEach(v => {
+                    if (v.alive && v.team !== this.team) {
+                        const dist = Math.hypot(v.x - this.x, v.y - this.y);
+                        if (dist <= radius) v.takeDamage(this.damage * 0.7);
+                    }
+                });
+            }
+
+            createImpactEffect(intensity = 15) {
+                for (let i = 0; i < intensity; i++) {
+                    particles.push(new Particle(
+                        this.x, this.y,
+                        (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6,
+                        ['#ef4444', '#f97316', '#fbbf24'][Math.floor(Math.random()*3)],
+                        Math.random() * 6 + 2, 22
+                    ));
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                if (this.type === 'gravity_bomb') {
+                    ctx.fillStyle = '#020617'; ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+                    ctx.fill(); ctx.stroke();
+                } else {
+                    ctx.fillStyle = this.team === 'green' ? '#86efac' : '#fca5a5'; ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x - Math.cos(this.angle) * 8, this.y - Math.sin(this.angle) * 8);
+                    ctx.strokeStyle = this.team === 'green' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(248, 113, 113, 0.5)';
+                    ctx.lineWidth = 2; ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
+
+        function checkGameOver() {
+            const greenAlive = vehicles.filter(v => v.team === 'green' && v.alive).length;
+            const redAlive = vehicles.filter(v => v.team === 'red' && v.alive).length;
+
+            if (greenAlive === 0 || redAlive === 0) {
+                if (timerInterval) clearInterval(timerInterval);
+
+                const overlay = document.getElementById('gameOverOverlay');
+                const winnerText = document.getElementById('winnerText');
+                const winnerSubtext = document.getElementById('winnerSubtext');
+
+                const killsMoney = greenKills * 1000;
+                const winMoney = greenAlive > 0 ? 10000 : 0;
+                const participationMoney = 500;
+                const totalEarned = killsMoney + winMoney + participationMoney;
+
+                const ratingDelta = greenAlive > 0 ? stakeWin : -stakeLoss;
+
+                if (window.saveUserData) {
+                    window.saveUserData(ratingDelta, totalEarned);
+                } else {
+                    window.playerMoney += totalEarned;
+                    updateMoneyUI();
+                }
+
+                document.getElementById('reward-kills-count').innerText = greenKills;
+                document.getElementById('reward-kills-money').innerText = `+$${killsMoney.toLocaleString()}`;
+                document.getElementById('reward-win-money').innerText = `+$${winMoney.toLocaleString()}`;
+                document.getElementById('reward-total').innerText = `+$${totalEarned.toLocaleString()}`;
+
+                const ratingChangeElem = document.getElementById('reward-rating-change');
+                if (greenAlive > 0) {
+                    ratingChangeElem.innerText = `+${stakeWin} PTS`;
+                    ratingChangeElem.className = "font-black text-emerald-400";
+                } else {
+                    ratingChangeElem.innerText = `-${stakeLoss} PTS`;
+                    ratingChangeElem.className = "font-black text-rose-500";
+                }
+                
+                const winRow = document.getElementById('reward-win-row');
+                if (greenAlive > 0) winRow.classList.remove('hidden');
+                else winRow.classList.add('hidden');
+
+                if (greenAlive > 0) {
+                    winnerText.innerText = "VITÓRIA DO TIME VERDE!";
+                    winnerText.className = "text-3xl md:text-4xl font-extrabold mb-1 tracking-wide text-emerald-400";
+                    winnerSubtext.innerText = "Sua equipe eliminou todos os alvos inimigos.";
+                } else {
+                    winnerText.innerText = "DERROTA DO TIME VERDE!";
+                    winnerText.className = "text-3xl md:text-4xl font-extrabold mb-1 tracking-wide text-rose-500";
+                    winnerSubtext.innerText = "Todos os seus veículos foram destruídos.";
+                }
+
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        window.onload = () => {
+            resizeCanvas();
+            updateMoneyUI();
+            requestAnimationFrame(gameLoop);
         };
-
-        resizeHandle.addEventListener('mousedown', resizeStart);
-        resizeHandle.addEventListener('touchstart', resizeStart, { passive: false });
-      }
-    }
-
-    function createBaseItem(type, id, x = 100, y = 100, w = 190, h = 130) {
-      const item = document.createElement('div');
-      item.className = `item ${type}`;
-      item.dataset.id = id;
-      item.style.left = x + 'px';
-      item.style.top = y + 'px';
-      item.style.width = w + 'px';
-      item.style.height = h + 'px';
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delete-btn';
-      delBtn.innerText = '✕';
-      delBtn.onclick = () => {
-        item.remove();
-        saveItemsToFirebase();
-      };
-      item.appendChild(delBtn);
-
-      const resizeHandle = document.createElement('div');
-      resizeHandle.className = 'resize-handle';
-      item.appendChild(resizeHandle);
-
-      makeInteractive(item);
-      return item;
-    }
-
-    window.addNote = function(text = 'Escreva algo aqui...', id = Date.now().toString(), x = 120, y = 120, w = 190, h = 130) {
-      if (document.querySelector(`[data-id="${id}"]`)) return;
-      const item = createBaseItem('note', id, x, y, w, h);
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.oninput = saveItemsToFirebase;
-      item.appendChild(textarea);
-      board.appendChild(item);
-      if (!isSyncingFromRemote) saveItemsToFirebase();
-    };
-
-    window.triggerFileInput = function(type) {
-      activeFileType = type;
-      fileInput.accept = type === 'image' ? 'image/*' : 'audio/*';
-      fileInput.click();
-    };
-
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const src = event.target.result;
-        if (activeFileType === 'image') {
-          addPhoto(src);
-        } else if (activeFileType === 'audio') {
-          addAudio(src);
-        }
-      };
-      reader.readAsDataURL(file);
-      fileInput.value = '';
-    });
-
-    function addPhoto(src, id = Date.now().toString(), x = 150, y = 150, w = 200, h = 160) {
-      if (document.querySelector(`[data-id="${id}"]`)) return;
-      const item = createBaseItem('photo', id, x, y, w, h);
-      const img = document.createElement('img');
-      img.src = src;
-      item.appendChild(img);
-      board.appendChild(item);
-      if (!isSyncingFromRemote) saveItemsToFirebase();
-    }
-
-    function addAudio(src, id = Date.now().toString(), x = 160, y = 160, w = 220, h = 80) {
-      if (document.querySelector(`[data-id="${id}"]`)) return;
-      const item = createBaseItem('audio', id, x, y, w, h);
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.src = src;
-      item.appendChild(audio);
-      board.appendChild(item);
-      if (!isSyncingFromRemote) saveItemsToFirebase();
-    }
-
-    // --- SINCRONIZAÇÃO DE ITENS NO FIREBASE ---
-    function saveItemsToFirebase() {
-      if (isSyncingFromRemote) return;
-
-      const items = [];
-      document.querySelectorAll('.item').forEach(el => {
-        const type = el.classList.contains('note') ? 'note' :
-                     el.classList.contains('photo') ? 'photo' : 'audio';
-
-        const data = {
-          id: el.dataset.id,
-          type,
-          x: parseInt(el.style.left),
-          y: parseInt(el.style.top),
-          w: parseInt(el.style.width),
-          h: parseInt(el.style.height)
-        };
-
-        if (type === 'note') data.content = el.querySelector('textarea').value;
-        if (type === 'photo') data.content = el.querySelector('img').src;
-        if (type === 'audio') data.content = el.querySelector('audio').src;
-
-        items.push(data);
-      });
-
-      set(itemsRef, items);
-    }
-
-    onValue(itemsRef, (snapshot) => {
-      const items = snapshot.val() || [];
-      isSyncingFromRemote = true;
-
-      board.innerHTML = '';
-
-      items.forEach(item => {
-        if (item.type === 'note') addNote(item.content, item.id, item.x, item.y, item.w, item.h);
-        if (item.type === 'photo') addPhoto(item.content, item.id, item.x, item.y, item.w, item.h);
-        if (item.type === 'audio') addAudio(item.content, item.id, item.x, item.y, item.w, item.h);
-      });
-
-      isSyncingFromRemote = false;
-    });
-  </script>
+    </script>
 </body>
 </html>
