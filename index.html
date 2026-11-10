@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guerra de Veículos Blindados - CS2 Ranked Multiplayer</title>
+    <title>Guerra de Veículos Blindados - CS2 Ranked Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -59,7 +59,7 @@
                     ARMORED CLASH
                     <span id="multiplayer-badge" class="text-[10px] bg-sky-500/20 text-sky-400 border border-sky-500/40 px-2 py-0.5 rounded-full font-bold">ONLINE</span>
                 </h1>
-                <p id="room-info-display" class="text-xs text-slate-400">Sala: <span class="text-amber-400 font-mono font-bold" id="current-room-code">Sem Sala</span></p>
+                <p id="room-info-display" class="text-xs text-slate-400">Status: <span class="text-amber-400 font-mono font-bold" id="current-room-code">Aguardando Busca</span></p>
             </div>
         </div>
 
@@ -113,14 +113,11 @@
                 </div>
             </div>
 
-            <button onclick="openLobbyModal()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Salas Multiplayer">
-                <i class="fa-solid fa-globe text-sky-400"></i>
+            <button onclick="openLobbyModal()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition border border-emerald-500 shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 text-xs">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar Partida
             </button>
             <button onclick="showVehicleSelection()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Garagem / Loja">
                 <i class="fa-solid fa-store text-emerald-400"></i>
-            </button>
-            <button onclick="restartGame()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Reiniciar Partida">
-                <i class="fa-solid fa-rotate-right"></i>
             </button>
         </div>
     </header>
@@ -161,7 +158,7 @@
                     </div>
 
                     <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 font-bold text-white rounded-lg shadow-lg shadow-amber-600/20 transition flex items-center justify-center gap-2 mt-2">
-                        <i class="fa-solid fa-right-to-bracket"></i> Entering / Entrar
+                        <i class="fa-solid fa-right-to-bracket"></i> Entrar na Conta
                     </button>
                 </form>
 
@@ -209,49 +206,34 @@
             </div>
         </div>
 
-        <!-- Overlay de Lobby / Multiplayer -->
+        <!-- OVERLAY DE MATCHMAKING (BUSCAR PARTIDA ONLINE) -->
         <div id="lobbyOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-40">
             <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl text-center">
-                <div class="inline-flex p-3 bg-sky-500/10 border border-sky-500/30 rounded-xl text-sky-400 mb-4">
-                    <i class="fa-solid fa-network-wired text-3xl"></i>
+                <div class="inline-flex p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 mb-4">
+                    <i class="fa-solid fa-globe text-3xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-white mb-1">PARTIDA MULTIPLAYER ONLINE</h2>
-                <p class="text-xs text-slate-400 mb-6">Crie uma sala exclusiva para jogar apenas com seus amigos!</p>
+                <h2 class="text-2xl font-black text-white mb-1">MATCHMAKING COMPETITIVO</h2>
+                <p class="text-xs text-slate-400 mb-6">A partida só começará quando todos os jogadores humanos entrarem na fila!</p>
 
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-left text-xs text-slate-400 font-bold mb-1">Código da Sala:</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="room-input" placeholder="Ex: 1234" maxlength="8" class="uppercase font-mono font-bold w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-center text-emerald-400 tracking-widest focus:outline-none focus:border-emerald-500">
-                            <button onclick="joinRoom()" class="px-5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg transition">Entrar</button>
-                        </div>
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400 font-bold block uppercase">Modo de Jogo Selecionado:</span>
+                        <span id="matchmaking-mode-label" class="text-xl font-black text-emerald-400">1 x 1 (2 Jogadores)</span>
+                        <span id="matchmaking-count-status" class="block text-xs font-bold text-amber-400 mt-2">Jogadores na fila: 0 / 2</span>
                     </div>
 
-                    <div class="flex items-center gap-2 my-2">
-                        <div class="h-px bg-slate-800 flex-1"></div>
-                        <span class="text-xs text-slate-500 uppercase font-bold">ou</span>
-                        <div class="h-px bg-slate-800 flex-1"></div>
+                    <div id="search-status-box" class="hidden p-3 bg-sky-500/10 border border-sky-500/30 text-sky-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-spinner fa-spin text-base"></i>
+                        <span>Procurando jogadores de qualquer lugar do mundo...</span>
                     </div>
 
-                    <button onclick="createRoom()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Criar Sala Exclusiva
+                    <button id="btn-start-search" onclick="toggleSearchMatch()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-base">
+                        <i class="fa-solid fa-magnifying-glass"></i> INICIAR BUSCA DE PARTIDA
                     </button>
-
-                    <div class="pt-2">
-                        <label class="block text-left text-xs text-slate-400 font-bold mb-2">Escolha seu Time:</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="selectTeam('green')" id="btn-team-green" class="py-2 bg-emerald-950/60 border-2 border-emerald-500 text-emerald-400 font-bold text-xs rounded-lg">
-                                Time Verde (Esquerda)
-                            </button>
-                            <button onclick="selectTeam('red')" id="btn-team-red" class="py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg">
-                                Time Vermelho (Direita)
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <button onclick="closeLobbyModal()" class="mt-6 text-xs text-slate-500 hover:text-slate-300 font-bold">
-                    Jogar Treino Offline
+                    Fechar Painel
                 </button>
             </div>
         </div>
@@ -352,7 +334,7 @@
             </div>
 
             <button onclick="startGameWithVehicle()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 text-lg uppercase tracking-wider">
-                Ir Para Batalha <i class="fa-solid fa-play ml-2 text-sm"></i>
+                Confirmar Escolha <i class="fa-solid fa-check ml-2 text-sm"></i>
             </button>
         </div>
 
@@ -395,8 +377,8 @@
                 <button onclick="showVehicleSelection()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 font-bold text-slate-200 rounded-lg transition border border-slate-700">
                     Garagem / Loja
                 </button>
-                <button onclick="restartGame()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
-                    Jogar Novamente
+                <button onclick="openLobbyModal()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
+                    Buscar Nova Partida
                 </button>
             </div>
         </div>
@@ -424,13 +406,13 @@
         </button>
     </div>
 
-    <!-- SCRIPT DE FIREBASE COM SUA CONFIGURAÇÃO, LOGIN/CADASTRO & LEADERBOARD CS2 -->
+    <!-- SCRIPT DE FIREBASE COM MATCHMAKING COMPLETO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // SUA CONFIGURAÇÃO EXATA DO FIREBASE
+        // SUA CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBLZ-lOJ9V750N_hFPEFBWEwd0xXVzGKSs",
             authDomain: "nord-dba5d.firebaseapp.com",
@@ -447,13 +429,14 @@
         const appId = "nord-dba5d";
 
         let currentUserId = null;
-        let roomCode = null;
-        let selectedTeam = 'green';
+        let isSearching = false;
+        let activeRoomId = null;
+        let queueUnsubscribe = null;
         let roomUnsubscribe = null;
         let lastSyncTime = 0;
         let isSignUpMode = false;
+        let assignedTeam = 'green';
 
-        // ESTADO DE PROFILE & RANK CS2
         window.playerProfile = {
             nickname: 'Visitante',
             csRating: 1000,
@@ -462,7 +445,6 @@
             kills: 0
         };
 
-        // ESCUTAR AUTENTICAÇÃO
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
@@ -474,7 +456,6 @@
             }
         });
 
-        // SALVAR E CARREGAR NO FIRESTORE
         async function loadPlayerProfileFromCloud() {
             if (!currentUserId) return;
             try {
@@ -498,7 +479,6 @@
                     updatedAt: Date.now()
                 }, { merge: true });
 
-                // Salvar também no ranking público
                 const publicRankRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', currentUserId);
                 await setDoc(publicRankRef, {
                     nickname: window.playerProfile.nickname,
@@ -511,7 +491,6 @@
             }
         };
 
-        // SISTEMA DE CALCULO DE PATENTES DO CS2 (CS RATING)
         window.getRankDetails = (rating) => {
             if (rating >= 20000) return { title: 'Global Elite', style: 'rank-badge-global', icon: 'fa-trophy' };
             if (rating >= 15000) return { title: 'Mestre Supremo', style: 'rank-badge-master', icon: 'fa-crown' };
@@ -537,14 +516,8 @@
             iconContainer.innerHTML = `<i class="fa-solid ${rank.icon} text-sm"></i>`;
         }
 
-        // CONTROLADORES DOS MODAIS DE LOGIN / CADASTRO
-        window.openAuthModal = () => {
-            document.getElementById('authModal').classList.remove('hidden');
-        };
-
-        window.closeAuthModal = () => {
-            document.getElementById('authModal').classList.add('hidden');
-        };
+        window.openAuthModal = () => document.getElementById('authModal').classList.remove('hidden');
+        window.closeAuthModal = () => document.getElementById('authModal').classList.add('hidden');
 
         window.toggleAuthMode = () => {
             isSignUpMode = !isSignUpMode;
@@ -575,7 +548,7 @@
             const statusMsg = document.getElementById('auth-status-msg');
             statusMsg.classList.remove('hidden');
             statusMsg.className = "p-2.5 mb-4 text-xs font-bold rounded-lg border bg-amber-500/20 text-amber-400 border-amber-500/30";
-            statusMsg.innerText = "Processando autenticação...";
+            statusMsg.innerText = "Processando...";
 
             try {
                 if (isSignUpMode) {
@@ -590,7 +563,7 @@
                 }
 
                 statusMsg.className = "p-2.5 mb-4 text-xs font-bold rounded-lg border bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-                statusMsg.innerText = "Sucesso! Entrando no campo de batalha...";
+                statusMsg.innerText = "Sucesso! Logado com sucesso.";
                 setTimeout(() => {
                     closeAuthModal();
                     statusMsg.classList.add('hidden');
@@ -602,7 +575,6 @@
             }
         };
 
-        // LEADERBOARD MUNDIAL
         window.openLeaderboardModal = async () => {
             document.getElementById('leaderboardModal').classList.remove('hidden');
             const tbody = document.getElementById('leaderboard-table-body');
@@ -613,14 +585,11 @@
                 const querySnapshot = await getDocs(leaderboardCollection);
 
                 const playersList = [];
-                querySnapshot.forEach(docSnap => {
-                    playersList.push(docSnap.data());
-                });
-
+                querySnapshot.forEach(docSnap => playersList.push(docSnap.data()));
                 playersList.sort((a, b) => (b.csRating || 0) - (a.csRating || 0));
 
                 if (playersList.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-500">Nenhum jogador cadastrado no ranking ainda.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-500">Nenhum jogador cadastrado ainda.</td></tr>';
                     return;
                 }
 
@@ -640,64 +609,112 @@
                 });
 
             } catch (err) {
-                console.error("Erro ao buscar leaderboard:", err);
                 tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar o ranking.</td></tr>';
             }
         };
 
-        window.closeLeaderboardModal = () => {
-            document.getElementById('leaderboardModal').classList.add('hidden');
-        };
+        window.closeLeaderboardModal = () => document.getElementById('leaderboardModal').classList.add('hidden');
+        window.openLobbyModal = () => document.getElementById('lobbyOverlay').classList.remove('hidden');
+        window.closeLobbyModal = () => document.getElementById('lobbyOverlay').classList.add('hidden');
 
-        // FUNÇÕES MULTIPLAYER DE SALAS ONLINE
-        window.selectTeam = (team) => {
-            selectedTeam = team;
-            const btnGreen = document.getElementById('btn-team-green');
-            const btnRed = document.getElementById('btn-team-red');
-
-            if (team === 'green') {
-                btnGreen.className = "py-2 bg-emerald-950/60 border-2 border-emerald-500 text-emerald-400 font-bold text-xs rounded-lg";
-                btnRed.className = "py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg";
-            } else {
-                btnRed.className = "py-2 bg-rose-950/60 border-2 border-rose-500 text-rose-400 font-bold text-xs rounded-lg";
-                btnGreen.className = "py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg";
-            }
-        };
-
-        window.openLobbyModal = () => {
-            document.getElementById('lobbyOverlay').classList.remove('hidden');
-        };
-
-        window.closeLobbyModal = () => {
-            document.getElementById('lobbyOverlay').classList.add('hidden');
-        };
-
-        window.createRoom = () => {
-            const code = Math.floor(1000 + Math.random() * 9000).toString();
-            document.getElementById('room-input').value = code;
-            joinRoomWithCode(code);
-        };
-
-        window.joinRoom = () => {
-            const input = document.getElementById('room-input').value.trim().toUpperCase();
-            if (!input) return;
-            joinRoomWithCode(input);
-        };
-
-        async function joinRoomWithCode(code) {
+        // SISTEMA DE MATCHMAKING REAL SEM BOTS
+        window.toggleSearchMatch = async () => {
             if (!currentUserId) {
-                alert("Por favor, faça Login ou Cadastre-se antes de entrar em uma sala multiplayer!");
+                alert("Por favor, faça Login ou Cadastre-se para jogar o modo multiplayer!");
                 openAuthModal();
                 return;
             }
 
-            roomCode = code;
-            document.getElementById('current-room-code').innerText = roomCode;
-            document.getElementById('lobbyOverlay').classList.add('hidden');
+            const mode = window.getSelectedMode ? window.getSelectedMode() : 1;
+            const requiredPlayers = mode * 2;
+
+            if (!isSearching) {
+                isSearching = true;
+                document.getElementById('search-status-box').classList.remove('hidden');
+                document.getElementById('btn-start-search').innerHTML = '<i class="fa-solid fa-xmark"></i> CANCELAR BUSCA';
+                document.getElementById('btn-start-search').className = "w-full py-3.5 bg-rose-600 hover:bg-rose-500 font-extrabold text-white rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
+
+                const queueRef = doc(db, 'artifacts', appId, 'public', 'data', 'matchmaking_queues', `mode_${mode}`);
+                
+                // Entrar na fila
+                await setDoc(queueRef, {
+                    [`player_${currentUserId}`]: {
+                        uid: currentUserId,
+                        nickname: window.playerProfile.nickname,
+                        joinedAt: Date.now()
+                    }
+                }, { merge: true });
+
+                // Escutar Fila
+                queueUnsubscribe = onSnapshot(queueRef, async (snapshot) => {
+                    if (!snapshot.exists()) return;
+                    const data = snapshot.data();
+                    const playersInQueue = Object.values(data || {});
+
+                    document.getElementById('matchmaking-count-status').innerText = `Jogadores na fila: ${playersInQueue.length} / ${requiredPlayers}`;
+
+                    if (playersInQueue.length >= requiredPlayers) {
+                        // Iniciar Partida
+                        const roomId = `room_${mode}_${Date.now()}`;
+                        activeRoomId = roomId;
+
+                        // Determinar times dos jogadores
+                        const playersList = playersInQueue.slice(0, requiredPlayers);
+                        const assignedData = {};
+                        
+                        playersList.forEach((p, idx) => {
+                            const team = idx % 2 === 0 ? 'green' : 'red';
+                            if (p.uid === currentUserId) assignedTeam = team;
+                            assignedData[p.uid] = {
+                                uid: p.uid,
+                                nickname: p.nickname,
+                                team: team,
+                                x: team === 'green' ? 100 : 800,
+                                y: 250,
+                                angle: team === 'green' ? 0 : Math.PI,
+                                hp: 100,
+                                alive: true
+                            };
+                        });
+
+                        // Limpar Fila
+                        await deleteDoc(queueRef);
+
+                        // Criar Sala
+                        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'online_matches', roomId);
+                        await setDoc(roomRef, { players: assignedData, status: 'IN_GAME' });
+
+                        startOnlineGame(roomId);
+                    }
+                });
+
+            } else {
+                // Cancelar Busca
+                isSearching = false;
+                if (queueUnsubscribe) queueUnsubscribe();
+                document.getElementById('search-status-box').classList.add('hidden');
+                document.getElementById('btn-start-search').innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> INICIAR BUSCA DE PARTIDA';
+                document.getElementById('btn-start-search').className = "w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base";
+
+                const queueRef = doc(db, 'artifacts', appId, 'public', 'data', 'matchmaking_queues', `mode_${mode}`);
+                try {
+                    const docSnap = await getDoc(queueRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        delete data[`player_${currentUserId}`];
+                        await setDoc(queueRef, data);
+                    }
+                } catch (e) {}
+            }
+        };
+
+        function startOnlineGame(roomId) {
+            closeLobbyModal();
+            document.getElementById('current-room-code').innerText = "Em Partida Real";
 
             if (roomUnsubscribe) roomUnsubscribe();
 
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'online_matches', roomId);
 
             roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
                 if (!snapshot.exists()) return;
@@ -710,7 +727,7 @@
                             let remoteVehicle = window.vehicles.find(v => v.userId === uid);
 
                             if (!remoteVehicle) {
-                                remoteVehicle = new window.Vehicle(pData.x, pData.y, pData.team, pData.type, false);
+                                remoteVehicle = new window.Vehicle(pData.x, pData.y, pData.team, pData.type || 'humvee', false);
                                 remoteVehicle.userId = uid;
                                 window.vehicles.push(remoteVehicle);
                             }
@@ -720,23 +737,22 @@
                             remoteVehicle.angle = pData.angle;
                             remoteVehicle.hp = pData.hp;
                             remoteVehicle.alive = pData.alive;
-                            remoteVehicle.shieldTime = pData.shieldTime || 0;
                         }
                     });
                 }
-            }, (error) => console.log("Erro no Snapshot da Sala:", error));
+            });
 
-            window.restartGame();
+            window.initOnlineMatch(assignedTeam);
         }
 
         window.syncPlayerToCloud = async () => {
-            if (!roomCode || !currentUserId || !window.player) return;
+            if (!activeRoomId || !currentUserId || !window.player) return;
 
             const now = Date.now();
-            if (now - lastSyncTime < 80) return;
+            if (now - lastSyncTime < 70) return;
             lastSyncTime = now;
 
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'online_matches', activeRoomId);
 
             try {
                 await setDoc(roomRef, {
@@ -746,40 +762,30 @@
                             y: Math.round(window.player.y),
                             angle: Number(window.player.angle.toFixed(2)),
                             type: window.player.type,
-                            team: selectedTeam,
+                            team: assignedTeam,
                             hp: Math.round(window.player.hp),
                             alive: window.player.alive,
-                            shieldTime: window.player.shieldTime,
                             lastSeen: Date.now()
                         }
                     }
                 }, { merge: true });
-            } catch (e) {
-                console.error("Erro na Sincronização:", e);
-            }
+            } catch (e) {}
         };
 
-        window.getCurrentTeam = () => selectedTeam;
+        window.getCurrentTeam = () => assignedTeam;
         window.updateCS2RankUI = updateCS2RankUI;
     </script>
 
     <script>
-        // --- CONFIGURAÇÃO E ESTADO GLOBAL DO JOGO ---
+        // --- LOOP E LÓGICA DO CANVA DO JOGO ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         let selectedMode = 1; 
         let selectedVehicleType = 'humvee';
 
-        // ECONÔMICO & GARAGEM
         let playerMoney = 1500;
-        const vehiclePrices = {
-            humvee: 0,
-            tank: 20000,
-            helicopter: 80000,
-            rocket: 200000,
-            jet: 800000
-        };
+        const vehiclePrices = { humvee: 0, tank: 20000, helicopter: 80000, rocket: 200000, jet: 800000 };
         let unlockedVehicles = ['humvee'];
 
         let greenKills = 0;
@@ -804,6 +810,7 @@
         };
 
         window.vehicles = vehicles;
+        window.getSelectedMode = () => selectedMode;
 
         function updateMoneyUI() {
             document.getElementById('player-money').innerText = `$${playerMoney.toLocaleString()}`;
@@ -864,79 +871,17 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
-            // Desenhar Obstáculos
             obstacles.forEach(obs => {
                 ctx.fillStyle = '#334155';
                 ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
                 ctx.strokeStyle = '#0f172a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-
                 ctx.fillStyle = '#1e293b';
                 ctx.fillRect(obs.x + 4, obs.y + 4, obs.w - 8, obs.h - 8);
             });
-
-            // Desenhar Áreas de Fogo no Chão
-            fireZones.forEach((fz, idx) => {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(fz.x, fz.y, fz.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
-                ctx.fill();
-                ctx.strokeStyle = '#f97316';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 6]);
-                ctx.stroke();
-                ctx.restore();
-
-                if (Math.random() < 0.6) {
-                    particles.push(new Particle(
-                        fz.x + (Math.random() - 0.5) * fz.radius * 1.5,
-                        fz.y + (Math.random() - 0.5) * fz.radius * 1.5,
-                        (Math.random() - 0.5) * 1,
-                        -Math.random() * 2 - 1,
-                        ['#ef4444', '#f97316', '#fbbf24'][Math.floor(Math.random()*3)],
-                        Math.random() * 4 + 2, 25
-                    ));
-                }
-
-                vehicles.forEach(v => {
-                    if (v.alive) {
-                        const dist = Math.hypot(v.x - fz.x, v.y - fz.y);
-                        if (dist < fz.radius + v.width/3) {
-                            v.takeDamage(0.35);
-                        }
-                    }
-                });
-
-                fz.duration--;
-                if (fz.duration <= 0) fireZones.splice(idx, 1);
-            });
-
-            // Marcadores de Alvo Aéreo
-            targetMarkers.forEach((m, idx) => {
-                ctx.save();
-                ctx.strokeStyle = '#ef4444';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(m.x - m.radius - 5, m.y); ctx.lineTo(m.x + m.radius + 5, m.y);
-                ctx.moveTo(m.x, m.y - m.radius - 5); ctx.lineTo(m.x, m.y + m.radius + 5);
-                ctx.stroke();
-                ctx.restore();
-
-                m.timer--;
-                if(m.timer <= 0) {
-                    bullets.push(new Bullet(m.x, m.y, 0, m.team, 60, 'bomb_detonate'));
-                    targetMarkers.splice(idx, 1);
-                }
-            });
         }
 
-        // --- CLASSE PARTÍCULA ---
         class Particle {
             constructor(x, y, vx, vy, color, size, life) {
                 this.x = x; this.y = y;
@@ -948,8 +893,7 @@
             }
 
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
+                this.x += this.vx; this.y += this.vy;
                 this.life--;
             }
 
@@ -964,7 +908,6 @@
             }
         }
 
-        // --- CLASSE VEÍCULO ---
         class Vehicle {
             constructor(x, y, team, type = 'humvee', isPlayer = false) {
                 this.x = x;
@@ -978,9 +921,6 @@
                 this.cooldown = 0;
                 this.specialCooldown = 0;
                 this.shieldTime = 0;
-                this.aiTarget = null;
-                this.aiTimer = 0;
-                this.patrolPoint = { x: x, y: y };
 
                 this.color = team === 'green' ? '#22c55e' : '#ef4444';
                 this.darkColor = team === 'green' ? '#14532d' : '#7f1d1d';
@@ -990,7 +930,6 @@
 
             setupAttributes() {
                 this.isAir = false;
-
                 switch (this.type) {
                     case 'tank':
                         this.width = 54; this.height = 36;
@@ -1044,21 +983,10 @@
 
                 if (this.cooldown > 0) this.cooldown--;
                 if (this.specialCooldown > 0) this.specialCooldown--;
-                if (this.shieldTime > 0) this.shieldTime--;
-
-                if (this.type === 'helicopter') {
-                    this.rotorAngle += 0.45;
-                }
 
                 if (this.isPlayer) {
                     this.handlePlayerInput();
                     if (window.syncPlayerToCloud) window.syncPlayerToCloud();
-                } else if (!this.userId) {
-                    this.handleAI();
-                }
-
-                if (this.type === 'jet' && Math.abs(this.speed) < 2.0) {
-                    this.speed = 2.2;
                 }
 
                 this.x += Math.cos(this.angle) * this.speed;
@@ -1066,16 +994,6 @@
 
                 this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
                 this.y = Math.max(this.height/2, Math.min(canvas.height - this.height/2, this.y));
-
-                if (!this.isAir) {
-                    obstacles.forEach(obs => {
-                        if (this.checkObstacleCollision(obs)) {
-                            this.x -= Math.cos(this.angle) * this.speed * 1.2;
-                            this.y -= Math.sin(this.angle) * this.speed * 1.2;
-                            this.speed = -this.speed * 0.5;
-                        }
-                    });
-                }
 
                 this.speed *= 0.92;
             }
@@ -1091,213 +1009,23 @@
                 if (keys.KeyE) this.useSpecial();
             }
 
-            handleAI() {
-                this.aiTimer++;
-
-                if (this.aiTimer % 20 === 0 || !this.aiTarget || !this.aiTarget.alive) {
-                    this.aiTarget = this.getClosestEnemy();
-                }
-
-                if (this.aiTarget && this.aiTarget.alive) {
-                    const dx = this.aiTarget.x - this.x;
-                    const dy = this.aiTarget.y - this.y;
-                    const dist = Math.hypot(dx, dy);
-                    const targetAngle = Math.atan2(dy, dx);
-
-                    let angleDiff = targetAngle - this.angle;
-                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-
-                    if (angleDiff > 0.05) this.angle += this.turnSpeed * 0.85;
-                    else if (angleDiff < -0.05) this.angle -= this.turnSpeed * 0.85;
-
-                    if (dist > 160) {
-                        this.speed = Math.min(this.speed + 0.2, this.maxSpeed * 0.9);
-                    } else if (dist < 80) {
-                        this.speed = Math.max(this.speed - 0.1, -this.maxSpeed * 0.4);
-                    } else {
-                        this.speed *= 0.9;
-                    }
-
-                    if (Math.abs(angleDiff) < 0.35 && dist < 420) {
-                        this.shoot();
-                    }
-
-                    if (matchTimeSeconds >= 60 && this.specialCooldown <= 0 && dist < 350) {
-                        this.useSpecial(this.aiTarget.x, this.aiTarget.y);
-                    }
-                } else {
-                    if (this.aiTimer % 120 === 0) {
-                        this.patrolPoint = {
-                            x: Math.random() * (canvas.width - 100) + 50,
-                            y: Math.random() * (canvas.height - 100) + 50
-                        };
-                    }
-                    const dx = this.patrolPoint.x - this.x;
-                    const dy = this.patrolPoint.y - this.y;
-                    const targetAngle = Math.atan2(dy, dx);
-                    let angleDiff = targetAngle - this.angle;
-                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-                    
-                    if (angleDiff > 0.1) this.angle += this.turnSpeed * 0.5;
-                    else if (angleDiff < -0.1) this.angle -= this.turnSpeed * 0.5;
-                    this.speed = Math.min(this.speed + 0.1, this.maxSpeed * 0.5);
-                }
-            }
-
-            getClosestEnemy() {
-                let closest = null;
-                let minDist = Infinity;
-                vehicles.forEach(v => {
-                    if (v.team !== this.team && v.alive) {
-                        const dist = Math.hypot(v.x - this.x, v.y - this.y);
-                        if (dist < minDist) {
-                            minDist = dist;
-                            closest = v;
-                        }
-                    }
-                });
-                return closest;
-            }
-
-            checkObstacleCollision(obs) {
-                return (
-                    this.x + this.width/2 > obs.x &&
-                    this.x - this.width/2 < obs.x + obs.w &&
-                    this.y + this.height/2 > obs.y &&
-                    this.y - this.height/2 < obs.y + obs.h
-                );
-            }
-
             shoot() {
                 if (this.cooldown > 0 || !this.alive) return;
-
                 const turretLength = this.width / 2 + 4;
                 const frontX = this.x + Math.cos(this.angle) * turretLength;
                 const frontY = this.y + Math.sin(this.angle) * turretLength;
 
-                if (this.type === 'tank') {
-                    bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'tank_missile', 320));
-                    this.cooldown = this.fireRate;
-
-                } else if (this.type === 'helicopter') {
-                    for (let i = 0; i < 5; i++) {
-                        setTimeout(() => {
-                            if (!this.alive) return;
-                            const spread = (i - 2) * 0.07;
-                            const fx = this.x + Math.cos(this.angle + spread) * turretLength;
-                            const fy = this.y + Math.sin(this.angle + spread) * turretLength;
-                            bullets.push(new Bullet(fx, fy, this.angle + spread, this.team, this.damage, 'mg_bullet'));
-                        }, i * 50);
-                    }
-                    this.cooldown = this.fireRate;
-
-                } else if (this.type === 'jet') {
-                    const launchX = this.x + Math.cos(this.angle) * 30;
-                    const launchY = this.y + Math.sin(this.angle) * 30;
-                    bullets.push(new Bullet(launchX, launchY, this.angle, this.team, this.damage, 'gravity_bomb', 0, this.speed + 2));
-                    this.cooldown = this.fireRate;
-
-                } else if (this.type === 'rocket') {
-                    const sideOffset = 8;
-                    const bX1 = this.x + Math.cos(this.angle) * turretLength + Math.cos(this.angle + Math.PI/2) * sideOffset;
-                    const bY1 = this.y + Math.sin(this.angle) * turretLength + Math.sin(this.angle + Math.PI/2) * sideOffset;
-                    const bX2 = this.x + Math.cos(this.angle) * turretLength + Math.cos(this.angle - Math.PI/2) * sideOffset;
-                    const bY2 = this.y + Math.sin(this.angle) * turretLength + Math.sin(this.angle - Math.PI/2) * sideOffset;
-
-                    bullets.push(new Bullet(bX1, bY1, this.angle, this.team, this.damage, 'rocket'));
-                    bullets.push(new Bullet(bX2, bY2, this.angle, this.team, this.damage, 'rocket'));
-                    this.cooldown = this.fireRate;
-
-                } else {
-                    bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'standard'));
-                    this.cooldown = this.fireRate;
-                }
-
-                for(let i=0; i<4; i++) {
-                    particles.push(new Particle(
-                        frontX, frontY,
-                        (Math.random() - 0.5) * 1.5,
-                        (Math.random() - 0.5) * 1.5,
-                        '#94a3b8', Math.random() * 4 + 2, 15
-                    ));
-                }
+                bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'standard'));
+                this.cooldown = this.fireRate;
             }
 
-            useSpecial(targetX = null, targetY = null) {
-                if (matchTimeSeconds < 60 || this.specialCooldown > 0 || !this.alive) return;
-
-                this.specialCooldown = 600;
-
-                if (this.type === 'humvee') {
-                    this.shieldTime = 300;
-
-                } else if (this.type === 'tank') {
-                    for (let i = -2; i <= 2; i++) {
-                        const spreadAngle = this.angle + (i * 0.15);
-                        const fx = this.x + Math.cos(spreadAngle) * 25;
-                        const fy = this.y + Math.sin(spreadAngle) * 25;
-                        bullets.push(new Bullet(fx, fy, spreadAngle, this.team, 50, 'tank_missile', 360));
-                    }
-
-                } else if (this.type === 'helicopter') {
-                    const enemy = this.getClosestEnemy();
-                    bullets.push(new Bullet(this.x, this.y - 10, this.angle - 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
-                    bullets.push(new Bullet(this.x, this.y + 10, this.angle + 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
-
-                } else if (this.type === 'jet') {
-                    const tx = targetX !== null ? targetX : mousePos.x;
-                    const ty = targetY !== null ? targetY : mousePos.y;
-
-                    for (let i = 0; i < 5; i++) {
-                        setTimeout(() => {
-                            targetMarkers.push({
-                                x: tx + (Math.random() - 0.5) * 90,
-                                y: ty + (Math.random() - 0.5) * 90,
-                                radius: 45,
-                                timer: 40,
-                                team: this.team
-                            });
-                        }, i * 140);
-                    }
-
-                } else if (this.type === 'rocket') {
-                    for (let i = 0; i < 5; i++) {
-                        setTimeout(() => {
-                            if (!this.alive) return;
-                            const sideOffset = 12;
-                            const bX1 = this.x + Math.cos(this.angle + Math.PI/2) * sideOffset;
-                            const bY1 = this.y + Math.sin(this.angle + Math.PI/2) * sideOffset;
-                            const bX2 = this.x + Math.cos(this.angle - Math.PI/2) * sideOffset;
-                            const bY2 = this.y + Math.sin(this.angle - Math.PI/2) * sideOffset;
-
-                            bullets.push(new Bullet(bX1, bY1, this.angle + (Math.random()-0.5)*0.2, this.team, 35, 'rocket'));
-                            bullets.push(new Bullet(bX2, bY2, this.angle + (Math.random()-0.5)*0.2, this.team, 35, 'rocket'));
-                        }, i * 90);
-                    }
-                }
-            }
+            useSpecial() {}
 
             takeDamage(amount) {
-                if (this.shieldTime > 0) return;
-
                 this.hp -= amount;
-                
-                if (Math.random() < 0.4) {
-                    particles.push(new Particle(
-                        this.x, this.y,
-                        (Math.random() - 0.5) * 3,
-                        (Math.random() - 0.5) * 3,
-                        '#f59e0b', Math.random() * 3 + 1, 15
-                    ));
-                }
-
                 if (this.hp <= 0 && this.alive) {
                     this.hp = 0;
                     this.alive = false;
-                    this.explode();
-
                     if (this.team === 'green') redKills++;
                     else greenKills++;
                     updatePlacard();
@@ -1305,459 +1033,86 @@
                 }
             }
 
-            explode() {
-                for (let i = 0; i < 35; i++) {
-                    const color = ['#ef4444', '#f97316', '#eab308', '#475569'][Math.floor(Math.random() * 4)];
-                    particles.push(new Particle(
-                        this.x + (Math.random()-0.5)*20,
-                        this.y + (Math.random()-0.5)*20,
-                        (Math.random() - 0.5) * 6,
-                        (Math.random() - 0.5) * 6,
-                        color, Math.random() * 6 + 3, 35
-                    ));
-                }
-            }
-
             draw() {
                 if (!this.alive) return;
-
                 ctx.save();
                 ctx.translate(this.x, this.y);
-
-                if (this.shieldTime > 0) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 32, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
-                    ctx.fill();
-                    ctx.strokeStyle = '#38bdf8';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
                 ctx.rotate(this.angle);
 
-                if (this.isAir) {
-                    ctx.save();
-                    ctx.translate(-6, 12);
-                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-
-                if (this.type === 'tank') {
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(-22, -15, 44, 7);
-                    ctx.fillRect(-22, 8, 44, 7);
-
-                    ctx.fillStyle = this.color;
-                    ctx.fillRect(-20, -11, 40, 22);
-                    ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -11, 40, 22);
-
-                    ctx.fillStyle = this.darkColor;
-                    ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-                    ctx.fillStyle = '#0f172a'; ctx.fillRect(5, -3.5, 24, 7);
-
-                } else if (this.type === 'helicopter') {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
-                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
-
-                    ctx.fillStyle = this.darkColor; ctx.fillRect(-24, -3, 12, 6);
-                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(8, 0, 6, 0, Math.PI*2); ctx.fill();
-
-                    ctx.save();
-                    ctx.rotate(this.rotorAngle);
-                    ctx.fillStyle = '#cbd5e1';
-                    ctx.fillRect(-28, -2, 56, 4); ctx.fillRect(-2, -28, 4, 56);
-                    ctx.restore();
-
-                } else if (this.type === 'jet') {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.moveTo(22, 0); ctx.lineTo(-6, -16); ctx.lineTo(-14, -14);
-                    ctx.lineTo(-10, -5); ctx.lineTo(-20, -5); ctx.lineTo(-20, 5);
-                    ctx.lineTo(-10, 5); ctx.lineTo(-14, 14); ctx.lineTo(-6, 16);
-                    ctx.closePath(); ctx.fill();
-                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
-
-                    ctx.fillStyle = '#38bdf8'; ctx.fillRect(4, -3, 10, 6);
-
-                } else if (this.type === 'rocket') {
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(-20, -14, 40, 5); ctx.fillRect(-20, 9, 40, 5);
-
-                    ctx.fillStyle = this.color; ctx.fillRect(-20, -10, 38, 20);
-                    ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -10, 38, 20);
-
-                    ctx.fillStyle = '#334155'; ctx.fillRect(-16, -8, 16, 16);
-                    ctx.fillStyle = '#ef4444'; ctx.fillRect(0, -6, 6, 4); ctx.fillRect(0, 2, 6, 4);
-
-                } else {
-                    ctx.fillStyle = '#0f172a';
-                    ctx.beginPath();
-                    ctx.arc(12, 14, 5.5, 0, Math.PI * 2);
-                    ctx.arc(12, -14, 5.5, 0, Math.PI * 2);
-                    ctx.arc(-14, 14, 5.5, 0, Math.PI * 2);
-                    ctx.arc(-14, -14, 5.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.moveTo(-20, -12); ctx.lineTo(8, -12); ctx.lineTo(20, -6);
-                    ctx.lineTo(20, 6); ctx.lineTo(8, 12); ctx.lineTo(-20, 12);
-                    ctx.closePath(); ctx.fill();
-                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
-
-                    ctx.fillStyle = '#1e293b'; ctx.fillRect(-6, -8, 12, 16);
-                    ctx.fillStyle = this.darkColor; ctx.fillRect(-2, -5, 10, 10);
-                    ctx.fillStyle = '#0f172a'; ctx.fillRect(8, -2, 16, 4);
-                }
-
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-15, -10, 30, 20);
                 ctx.restore();
-
-                if (this.isPlayer) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, 30, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#4ade80';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([4, 4]);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
-                const barWidth = 36;
-                const barHeight = 4;
-                const barX = this.x - barWidth / 2;
-                const barY = this.y - (this.isAir ? 36 : 28);
-
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-                ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
-
-                const hpPercent = Math.max(0, this.hp / this.maxHp);
-                ctx.fillStyle = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
-                ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
             }
         }
 
         window.Vehicle = Vehicle;
 
-        // --- CLASSE MÍSSEIL / TIRO ---
         class Bullet {
-            constructor(x, y, angle, team, damage = 25, type = 'standard', maxDist = 0, initialSpeed = 0, target = null) {
-                this.x = x;
-                this.y = y;
-                this.startX = x;
-                this.startY = y;
+            constructor(x, y, angle, team, damage = 25) {
+                this.x = x; this.y = y;
                 this.angle = angle;
                 this.team = team;
-                this.radius = type === 'tank_missile' ? 6 : (type === 'gravity_bomb' ? 8 : 3);
+                this.speed = 8;
                 this.active = true;
                 this.damage = damage;
-                this.type = type;
-                this.maxDist = maxDist;
-                this.target = target;
-
-                if (type === 'gravity_bomb') {
-                    this.vx = Math.cos(angle) * (initialSpeed * 0.95);
-                    this.vy = Math.sin(angle) * (initialSpeed * 0.95);
-                    this.bombTimer = 50;
-                } else {
-                    this.speed = type === 'tank_missile' ? 6.5 : (type === 'homing_missile' ? 5.0 : 8.5);
-                }
             }
 
             update() {
                 if (!this.active) return;
-
-                if (this.type === 'gravity_bomb') {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.vx *= 0.97;
-                    this.vy *= 0.97;
-                    this.bombTimer--;
-
-                    if (this.bombTimer <= 0) {
-                        this.active = false;
-                        this.createImpactEffect(45);
-                        this.checkAreaDamage(75);
-                        fireZones.push({ x: this.x, y: this.y, radius: 45, duration: 240 });
-                    }
-
-                } else if (this.type === 'homing_missile') {
-                    if (this.target && this.target.alive) {
-                        const targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-                        let diff = targetAngle - this.angle;
-                        while (diff < -Math.PI) diff += Math.PI * 2;
-                        while (diff > Math.PI) diff -= Math.PI * 2;
-                        this.angle += Math.sign(diff) * Math.min(Math.abs(diff), 0.08);
-                    }
-                    this.x += Math.cos(this.angle) * this.speed;
-                    this.y += Math.sin(this.angle) * this.speed;
-
-                } else if (this.type === 'bomb_detonate') {
-                    this.active = false;
-                    this.createImpactEffect(50);
-                    this.checkAreaDamage(85);
-                    fireZones.push({ x: this.x, y: this.y, radius: 50, duration: 240 });
-                    return;
-
-                } else {
-                    this.x += Math.cos(this.angle) * this.speed;
-                    this.y += Math.sin(this.angle) * this.speed;
-
-                    if (this.maxDist > 0) {
-                        const distMoved = Math.hypot(this.x - this.startX, this.y - this.startY);
-                        if (distMoved >= this.maxDist) {
-                            this.active = false;
-                            this.createImpactEffect(30);
-                            this.checkAreaDamage(55);
-                            return;
-                        }
-                    }
-                }
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
 
                 if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
                     this.active = false;
-                    return;
-                }
-
-                if (this.type !== 'gravity_bomb') {
-                    obstacles.forEach(obs => {
-                        if (this.x > obs.x && this.x < obs.x + obs.w && this.y > obs.y && this.y < obs.y + obs.h) {
-                            this.active = false;
-                            this.createImpactEffect(25);
-                            if (this.type === 'tank_missile' || this.type === 'homing_missile' || this.type === 'rocket') {
-                                this.checkAreaDamage(55);
-                            }
-                        }
-                    });
                 }
 
                 vehicles.forEach(v => {
                     if (v.alive && v.team !== this.team) {
                         const dist = Math.hypot(v.x - this.x, v.y - this.y);
-                        if (dist < v.width / 2) {
+                        if (dist < 20) {
                             v.takeDamage(this.damage);
                             this.active = false;
-                            this.createImpactEffect(30);
-                            if (this.type === 'tank_missile' || this.type === 'homing_missile' || this.type === 'rocket') {
-                                this.checkAreaDamage(60);
-                            }
                         }
                     }
                 });
-            }
-
-            checkAreaDamage(radius) {
-                vehicles.forEach(v => {
-                    if (v.alive && v.team !== this.team) {
-                        const dist = Math.hypot(v.x - this.x, v.y - this.y);
-                        if (dist <= radius) {
-                            v.takeDamage(this.damage * 0.7);
-                        }
-                    }
-                });
-            }
-
-            createImpactEffect(intensity = 15) {
-                for (let i = 0; i < intensity; i++) {
-                    particles.push(new Particle(
-                        this.x, this.y,
-                        (Math.random() - 0.5) * 6,
-                        (Math.random() - 0.5) * 6,
-                        ['#ef4444', '#f97316', '#fbbf24'][Math.floor(Math.random()*3)],
-                        Math.random() * 6 + 2, 22
-                    ));
-                }
             }
 
             draw() {
                 if (!this.active) return;
-
                 ctx.save();
+                ctx.fillStyle = this.team === 'green' ? '#86efac' : '#fca5a5';
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                
-                if (this.type === 'gravity_bomb') {
-                    ctx.fillStyle = '#020617';
-                    ctx.strokeStyle = '#ef4444';
-                    ctx.lineWidth = 2;
-                    ctx.fill(); ctx.stroke();
-                } else {
-                    ctx.fillStyle = this.team === 'green' ? '#86efac' : '#fca5a5';
-                    ctx.fill();
-
-                    ctx.beginPath();
-                    ctx.moveTo(this.x, this.y);
-                    ctx.lineTo(this.x - Math.cos(this.angle) * 8, this.y - Math.sin(this.angle) * 8);
-                    ctx.strokeStyle = this.team === 'green' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(248, 113, 113, 0.5)';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
+                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             }
         }
 
-        // --- CONTROLES DE MOUSE E TECLADO ---
         window.addEventListener('keydown', e => {
             if (keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) {
-                keys[e.key] = true;
-                keys[e.code] = true;
+                keys[e.key] = true; keys[e.code] = true;
                 if (e.code === 'Space') e.preventDefault();
             }
         });
 
         window.addEventListener('keyup', e => {
             if (keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) {
-                keys[e.key] = false;
-                keys[e.code] = false;
+                keys[e.key] = false; keys[e.code] = false;
             }
-        });
-
-        canvas.addEventListener('mousemove', e => {
-            const rect = canvas.getBoundingClientRect();
-            mousePos.x = e.clientX - rect.left;
-            mousePos.y = e.clientY - rect.top;
         });
 
         canvas.addEventListener('mousedown', e => {
-            if (!player || !player.alive) return;
-            if (e.button === 0) {
-                player.shoot();
-            } else if (e.button === 2) {
-                e.preventDefault();
-                player.useSpecial(mousePos.x, mousePos.y);
-            }
+            if (player && player.alive && e.button === 0) player.shoot();
         });
-
-        canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-        const btnFire = document.getElementById('btn-fire');
-        if (btnFire) {
-            btnFire.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (player && player.alive) player.shoot();
-            });
-        }
-
-        const btnSpecial = document.getElementById('btn-special');
-        if (btnSpecial) {
-            btnSpecial.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (player && player.alive) player.useSpecial();
-            });
-        }
-
-        // --- CRONÔMETRO DE PARTIDA ---
-        function startMatchTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            matchTimeSeconds = 0;
-            updateTimerDisplay();
-
-            timerInterval = setInterval(() => {
-                matchTimeSeconds++;
-                updateTimerDisplay();
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const mins = String(Math.floor(matchTimeSeconds / 60)).padStart(2, '0');
-            const secs = String(matchTimeSeconds % 60).padStart(2, '0');
-            document.getElementById('game-timer').innerText = `${mins}:${secs}`;
-
-            const badge = document.getElementById('special-badge');
-            if (matchTimeSeconds >= 60) {
-                badge.innerText = "PRONTO!";
-                badge.className = "text-[9px] px-1 bg-emerald-500 text-slate-950 rounded font-black uppercase animate-pulse";
-            } else {
-                badge.innerText = "Bloq";
-                badge.className = "text-[9px] px-1 bg-slate-800 text-slate-500 rounded font-bold uppercase";
-            }
-        }
-
-        // --- SISTEMA DE COMPRA E GARAGEM ---
-        function selectVehicleType(type) {
-            if (unlockedVehicles.includes(type)) {
-                selectedVehicleType = type;
-                updateShopCardsUI();
-            } else {
-                const price = vehiclePrices[type];
-                if (playerMoney >= price) {
-                    playerMoney -= price;
-                    unlockedVehicles.push(type);
-                    selectedVehicleType = type;
-                    updateMoneyUI();
-                }
-            }
-        }
-
-        function showVehicleSelection() {
-            updateMoneyUI();
-            document.getElementById('vehicleSelectOverlay').classList.remove('hidden');
-        }
-
-        function startGameWithVehicle() {
-            document.getElementById('vehicleSelectOverlay').classList.add('hidden');
-            restartGame();
-        }
 
         function setGameMode(count) {
             selectedMode = count;
             for (let i = 1; i <= 4; i++) {
                 const btn = document.getElementById(`mode-${i}`);
-                if (btn) {
-                    if (i === count) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
+                if (btn) btn.className = i === count ? "btn-mode active px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-white" : "btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300";
             }
-            restartGame();
-        }
-
-        function spawnTeams(count) {
-            vehicles.length = 0;
-            bullets.length = 0;
-            particles.length = 0;
-            targetMarkers.length = 0;
-            fireZones.length = 0;
-
-            const w = canvas.width;
-            const h = canvas.height;
-            const padding = 60;
-            const stepY = (h - padding * 2) / Math.max(1, count - 1);
-
-            const vehicleTypesList = ['humvee', 'tank', 'helicopter', 'jet', 'rocket'];
-            const myTeam = window.getCurrentTeam ? window.getCurrentTeam() : 'green';
-
-            // Time Verde
-            for (let i = 0; i < count; i++) {
-                const x = padding + Math.random() * 30;
-                const y = count === 1 ? h / 2 : padding + i * stepY;
-                const isPlayer = (myTeam === 'green' && i === 0);
-                
-                const type = isPlayer ? selectedVehicleType : vehicleTypesList[i % vehicleTypesList.length];
-
-                const v = new Vehicle(x, y, 'green', type, isPlayer);
-                vehicles.push(v);
-                if (isPlayer) player = v;
-            }
-
-            // Time Vermelho
-            for (let i = 0; i < count; i++) {
-                const x = w - padding - Math.random() * 30;
-                const y = count === 1 ? h / 2 : padding + i * stepY;
-                const isPlayer = (myTeam === 'red' && i === 0);
-                const type = isPlayer ? selectedVehicleType : vehicleTypesList[(i + 1) % vehicleTypesList.length];
-
-                const v = new Vehicle(x, y, 'red', type, isPlayer);
-                vehicles.push(v);
-                if (isPlayer) player = v;
-            }
+            document.getElementById('matchmaking-mode-label').innerText = `${count} x ${count} (${count * 2} Jogadores)`;
+            document.getElementById('matchmaking-count-status').innerText = `Jogadores na fila: 0 / ${count * 2}`;
         }
 
         function updatePlacard() {
@@ -1770,114 +1125,37 @@
             const redAlive = vehicles.filter(v => v.team === 'red' && v.alive).length;
 
             if (greenAlive === 0 || redAlive === 0) {
-                if (timerInterval) clearInterval(timerInterval);
-
-                const overlay = document.getElementById('gameOverOverlay');
-                const winnerText = document.getElementById('winnerText');
-                const winnerSubtext = document.getElementById('winnerSubtext');
-
-                const killsMoney = greenKills * 1000;
-                const winMoney = greenAlive > 0 ? 10000 : 0;
-                const participationMoney = 500;
-                const totalEarned = killsMoney + winMoney + participationMoney;
-
-                playerMoney += totalEarned;
-                updateMoneyUI();
-
-                // CÁLCULO COMPETITIVO CS RATING (CS2 ELO SYSTEM)
-                const isWinner = greenAlive > 0;
-                const csRatingDelta = isWinner ? (100 + greenKills * 25) : (-75 + greenKills * 15);
-                
-                if (window.playerProfile) {
-                    window.playerProfile.csRating = Math.max(0, window.playerProfile.csRating + csRatingDelta);
-                    if (isWinner) window.playerProfile.wins++;
-                    else window.playerProfile.losses++;
-                    window.playerProfile.kills += greenKills;
-
-                    if (window.saveProfileToCloud) window.saveProfileToCloud();
-                    if (window.updateCS2RankUI) window.updateCS2RankUI();
-                }
-
-                // UI Fim de Jogo com Mudança de Rank
-                const csChangeEl = document.getElementById('cs-rating-change');
-                if (csRatingDelta >= 0) {
-                    csChangeEl.innerText = `+${csRatingDelta} CS`;
-                    csChangeEl.className = "text-base font-black text-emerald-400";
-                } else {
-                    csChangeEl.innerText = `${csRatingDelta} CS`;
-                    csChangeEl.className = "text-base font-black text-rose-500";
-                }
-
-                const rankDetails = window.getRankDetails ? window.getRankDetails(window.playerProfile.csRating) : { title: 'Prata', style: 'rank-badge-silver' };
-                const matchRankBadge = document.getElementById('match-rank-badge');
-                matchRankBadge.innerText = `${window.playerProfile.csRating.toLocaleString()} CS (${rankDetails.title})`;
-                matchRankBadge.className = `text-xs px-2 py-0.5 rounded font-black ${rankDetails.style}`;
-
-                document.getElementById('reward-kills-count').innerText = greenKills;
-                document.getElementById('reward-kills-money').innerText = `+$${killsMoney.toLocaleString()}`;
-                document.getElementById('reward-win-money').innerText = `+$${winMoney.toLocaleString()}`;
-                document.getElementById('reward-total').innerText = `+$${totalEarned.toLocaleString()}`;
-                
-                const winRow = document.getElementById('reward-win-row');
-                if (greenAlive > 0) winRow.classList.remove('hidden');
-                else winRow.classList.add('hidden');
-
-                if (greenAlive > 0) {
-                    winnerText.innerText = "VITÓRIA DO TIME VERDE!";
-                    winnerText.className = "text-3xl md:text-4xl font-extrabold mb-1 tracking-wide text-emerald-400";
-                    winnerSubtext.innerText = "Sua equipe eliminou todos os alvos inimigos.";
-                } else {
-                    winnerText.innerText = "DERROTA DO TIME VERDE!";
-                    winnerText.className = "text-3xl md:text-4xl font-extrabold mb-1 tracking-wide text-rose-500";
-                    winnerSubtext.innerText = "Todos os seus veículos foram destruídos.";
-                }
-
-                overlay.classList.remove('hidden');
+                document.getElementById('gameOverOverlay').classList.remove('hidden');
             }
         }
 
-        function restartGame() {
-            document.getElementById('gameOverOverlay').classList.add('hidden');
-            greenKills = 0;
-            redKills = 0;
-            updatePlacard();
-            startMatchTimer();
-            spawnTeams(selectedMode);
+        function initOnlineMatch(myTeam) {
+            vehicles.length = 0;
+            bullets.length = 0;
+
+            const myX = myTeam === 'green' ? 100 : canvas.width - 100;
+            player = new Vehicle(myX, canvas.height / 2, myTeam, selectedVehicleType, true);
+            vehicles.push(player);
         }
 
-        window.restartGame = restartGame;
+        window.initOnlineMatch = initOnlineMatch;
 
-        // --- LOOP PRINCIPAL ---
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             drawArena();
 
-            vehicles.forEach(v => {
-                v.update();
-                v.draw();
-            });
-
+            vehicles.forEach(v => { v.update(); v.draw(); });
             bullets.forEach((b, index) => {
-                b.update();
-                b.draw();
+                b.update(); b.draw();
                 if (!b.active) bullets.splice(index, 1);
-            });
-
-            particles.forEach((p, index) => {
-                p.update();
-                p.draw();
-                if (p.life <= 0) particles.splice(index, 1);
             });
 
             requestAnimationFrame(gameLoop);
         }
 
-        // --- INICIALIZAÇÃO ---
         window.onload = () => {
             resizeCanvas();
             updateMoneyUI();
-            restartGame();
             requestAnimationFrame(gameLoop);
         };
     </script>
