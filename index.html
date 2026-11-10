@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guerra de Veículos Blindados</title>
+    <title>Guerra de Veículos Blindados - Multiplayer Realtime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -39,62 +39,14 @@
             background-color: rgba(34, 197, 94, 0.15);
             box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
         }
-        .cs-rating-badge {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
+        /* Custom Rank Badge Colors */
+        .rank-badge-silver { color: #cbd5e1; border-color: #94a3b8; background: rgba(148, 163, 184, 0.15); }
+        .rank-badge-gold { color: #facc15; border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
+        .rank-badge-master { color: #c084fc; border-color: #a855f7; background: rgba(168, 85, 247, 0.15); }
+        .rank-badge-global { color: #f43f5e; border-color: #e11d48; background: rgba(225, 29, 72, 0.2); box-shadow: 0 0 12px rgba(225, 29, 72, 0.4); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 md:p-4 overflow-x-hidden">
-
-    <!-- TELA DE LOGIN / REGISTRO CS-STYLE -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <div class="text-center mb-6">
-                <div class="inline-flex p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 mb-3">
-                    <i class="fa-solid fa-trophy text-3xl"></i>
-                </div>
-                <h2 class="text-2xl font-black tracking-wide text-white">CS-RATING MILITAR</h2>
-                <p class="text-xs text-slate-400 mt-1">Crie seu apelido e senha para disputar o Leaderboard Global!</p>
-            </div>
-
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nick de Combatente</label>
-                    <input type="text" id="loginUsername" required placeholder="Ex: General_Viper" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Senha de Acesso</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                </div>
-
-                <div id="loginError" class="hidden text-xs text-rose-500 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20"></div>
-
-                <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 font-extrabold text-white rounded-lg shadow-lg shadow-amber-600/30 transition text-sm uppercase tracking-wider">
-                    Entrar na Arena
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DE LEADERBOARD GLOBAL -->
-    <div id="leaderboardOverlay" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-40">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-ranking-star text-amber-400 text-xl"></i>
-                    <h3 class="text-lg font-black text-white uppercase tracking-wider">TOP RANKS PREMIER</h3>
-                </div>
-                <button onclick="toggleLeaderboard(false)" class="text-slate-400 hover:text-white text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-2 pr-1">
-                <!-- Preenchido via JS -->
-            </div>
-        </div>
-    </div>
 
     <!-- Header & Placard -->
     <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-2 bg-slate-900/80 p-4 rounded-xl border border-slate-800 backdrop-blur">
@@ -103,28 +55,11 @@
                 <i class="fa-solid fa-shield-halved text-2xl"></i>
             </div>
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="font-bold text-xl tracking-wide text-emerald-400">ARMORED CLASH</h1>
-                    <span id="player-username" class="text-xs px-2 py-0.5 bg-slate-800 border border-slate-700 text-slate-300 rounded font-bold">---</span>
-                </div>
-                <!-- CS RATING CS2 -->
-                <div class="flex items-center gap-2 mt-0.5">
-                    <span class="text-[10px] text-slate-400 uppercase font-bold">CS Rating:</span>
-                    <span id="player-rating" class="px-2 py-0.5 rounded text-xs font-black text-slate-950 cs-rating-badge">1.000 PTS</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- INDICADOR DE SORTEIO DE PONTOS DA PARTIDA (ESTILO CS2 PREMIER) -->
-        <div class="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
-            <div class="text-center">
-                <span class="block text-[9px] text-emerald-400 font-bold uppercase">Vitória</span>
-                <span id="stake-win" class="text-sm font-black text-emerald-400">+220</span>
-            </div>
-            <span class="text-slate-600 font-black text-xs">|</span>
-            <div class="text-center">
-                <span class="block text-[9px] text-rose-400 font-bold uppercase">Derrota</span>
-                <span id="stake-loss" class="text-sm font-black text-rose-400">-170</span>
+                <h1 class="font-bold text-xl tracking-wide text-emerald-400 flex items-center gap-2">
+                    ARMORED CLASH
+                    <span id="multiplayer-badge" class="text-[10px] bg-sky-500/20 text-sky-400 border border-sky-500/40 px-2 py-0.5 rounded-full font-bold">ONLINE</span>
+                </h1>
+                <p id="room-info-display" class="text-xs text-slate-400">Sala: <span class="text-amber-400 font-mono font-bold" id="current-room-code">Offline</span></p>
             </div>
         </div>
 
@@ -134,24 +69,54 @@
             <button onclick="setGameMode(2)" id="mode-2" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">2 x 2</button>
             <button onclick="setGameMode(3)" id="mode-3" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">3 x 3</button>
             <button onclick="setGameMode(4)" id="mode-4" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">4 x 4</button>
-            <button onclick="setGameMode(5)" id="mode-5" class="btn-mode px-3 py-1.5 text-xs font-bold rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700">5 x 5</button>
         </div>
 
-        <!-- Controles, Dinheiro & Status -->
+        <!-- Controles, Dinheiro & Status CS2 Rating -->
         <div class="flex flex-wrap items-center justify-center gap-3">
+            <!-- CS2 Rank Card Display -->
+            <div id="user-rank-card" class="flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700" onclick="openAuthModal()">
+                <div id="rank-icon-container" class="text-amber-400"><i class="fa-solid fa-trophy text-sm"></i></div>
+                <div class="text-left">
+                    <div class="flex items-center gap-1">
+                        <span id="player-nickname" class="text-xs font-bold text-slate-200">Recruta</span>
+                        <span id="player-rank-badge" class="text-[9px] px-1.5 py-0.2 rounded font-black rank-badge-silver">1.000 CS</span>
+                    </div>
+                    <span id="player-rank-title" class="block text-[9px] text-slate-400 font-bold uppercase">Prata I</span>
+                </div>
+            </div>
+
             <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-950/40 border border-amber-500/40 rounded-lg">
                 <i class="fa-solid fa-coins text-amber-400 text-sm"></i>
                 <span id="player-money" class="text-sm font-black text-amber-400">$0</span>
             </div>
 
-            <button onclick="toggleLeaderboard(true)" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg transition border border-slate-700" title="Leaderboard Global">
-                <i class="fa-solid fa-trophy"></i>
+            <div class="text-center px-2.5 py-1 bg-emerald-950/40 border border-emerald-600/30 rounded-lg">
+                <span class="block text-[9px] text-emerald-400 font-bold uppercase">Verde</span>
+                <span id="score-green" class="text-base font-black text-emerald-400">0</span>
+            </div>
+            <span class="text-slate-600 font-black text-xs">VS</span>
+            <div class="text-center px-2.5 py-1 bg-rose-950/40 border border-rose-600/30 rounded-lg">
+                <span class="block text-[9px] text-rose-400 font-bold uppercase">Vermelho</span>
+                <span id="score-red" class="text-base font-black text-rose-400">0</span>
+            </div>
+            
+            <!-- Timer do Jogo e Especial -->
+            <div class="text-center px-3 py-1 bg-slate-900 border border-slate-700 rounded-lg min-w-[90px]">
+                <span class="block text-[9px] text-slate-400 font-bold uppercase">Especial</span>
+                <div class="flex items-center justify-center gap-1">
+                    <span id="game-timer" class="text-xs font-bold text-slate-200">00:00</span>
+                    <span id="special-badge" class="text-[9px] px-1 bg-slate-800 text-slate-500 rounded font-bold uppercase">Bloq</span>
+                </div>
+            </div>
+
+            <button onclick="openLobbyModal()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Salas Multiplayer">
+                <i class="fa-solid fa-globe text-sky-400"></i>
             </button>
             <button onclick="showVehicleSelection()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Garagem / Loja">
                 <i class="fa-solid fa-store text-emerald-400"></i>
             </button>
-            <button onclick="leaveQueueOrMatch()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Sair da Partida / Fila">
-                <i class="fa-solid fa-door-open text-rose-400"></i>
+            <button onclick="restartGame()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700" title="Reiniciar Partida">
+                <i class="fa-solid fa-rotate-right"></i>
             </button>
         </div>
     </header>
@@ -160,36 +125,100 @@
     <main class="relative w-full max-w-5xl flex-1 flex items-center justify-center min-h-[450px]">
         <canvas id="gameCanvas" class="w-full h-full rounded-xl border border-slate-800 cursor-crosshair"></canvas>
 
-        <!-- OVERLAY DE BUSCA DE PARTIDA / LOBBY PREMIER (ESTILO CS2) -->
-        <div id="matchmakingOverlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-25 text-center">
-            <div class="relative mb-6">
-                <div class="w-20 h-20 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin flex items-center justify-center"></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <i class="fa-solid fa-crosshairs text-amber-400 text-2xl animate-pulse"></i>
+        <!-- MODAL DE LOGIN / PERFIL DO JOGADOR -->
+        <div id="authModal" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-50">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl relative text-center">
+                <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+
+                <div class="inline-flex p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 mb-3">
+                    <i class="fa-solid fa-user-shield text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white mb-1">PERFIL COMPETITIVO CS2</h2>
+                <p class="text-xs text-slate-400 mb-6">Identifique-se para salvar suas vitórias, ELO e pontuação no ranking mundial.</p>
+
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs text-slate-400 font-bold mb-1">Seu Nickname Militar:</label>
+                        <input type="text" id="auth-nickname" placeholder="Ex: Commander_Ghost" maxlength="16" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-100 font-bold focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <button onclick="savePlayerProfile()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 font-bold text-white rounded-lg shadow-lg shadow-amber-600/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Perfil & Atualizar CS Rating
+                    </button>
+                </div>
+
+                <!-- Tabela de Ranks CS2 Preview -->
+                <div class="mt-6 pt-4 border-t border-slate-800 text-left">
+                    <h3 class="text-xs font-extrabold text-slate-300 uppercase mb-2">Patentes Competitivas:</h3>
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                            <span class="text-slate-400 font-bold">Prata (0 - 4.999)</span>
+                        </div>
+                        <div class="p-2 bg-slate-950 rounded border border-amber-500/30">
+                            <span class="text-amber-400 font-bold">Ouro (5.000 - 11.999)</span>
+                        </div>
+                        <div class="p-2 bg-slate-950 rounded border border-purple-500/30">
+                            <span class="text-purple-400 font-bold">Mestre (12.000 - 19.999)</span>
+                        </div>
+                        <div class="p-2 bg-slate-950 rounded border border-rose-500/40">
+                            <span class="text-rose-400 font-black">Global (20.000+)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <h2 class="text-2xl font-black text-white tracking-wider uppercase mb-1">PROCURANDO PARTIDA ONLINE</h2>
-            <p id="queue-mode-text" class="text-amber-400 font-bold text-sm mb-4">Modo: 1 x 1 (Necessário 2 Jogadores)</p>
+        </div>
 
-            <div class="bg-slate-900 border border-slate-800 px-6 py-4 rounded-xl mb-6 min-w-[280px]">
-                <div class="text-xs text-slate-400 font-bold uppercase mb-2">Jogadores Conectados na Sala</div>
-                <div class="text-3xl font-black text-emerald-400 tracking-wider">
-                    <span id="connected-count">1</span> / <span id="required-count">2</span>
+        <!-- Overlay de Lobby / Multiplayer -->
+        <div id="lobbyOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-40">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl text-center">
+                <div class="inline-flex p-3 bg-sky-500/10 border border-sky-500/30 rounded-xl text-sky-400 mb-4">
+                    <i class="fa-solid fa-network-wired text-3xl"></i>
                 </div>
-                <!-- Lista dos nicks dos jogadores no lobby -->
-                <div id="lobby-players-list" class="mt-3 text-xs text-slate-300 flex flex-wrap justify-center gap-2">
-                    <!-- Preenchido via JS -->
+                <h2 class="text-2xl font-black text-white mb-1">PARTIDA MULTIPLAYER</h2>
+                <p class="text-xs text-slate-400 mb-6">Jogue em tempo real com amigos em qualquer lugar do mundo!</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-left text-xs text-slate-400 font-bold mb-1">Código da Sala:</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="room-input" placeholder="Ex: 1234" maxlength="8" class="uppercase font-mono font-bold w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-center text-emerald-400 tracking-widest focus:outline-none focus:border-emerald-500">
+                            <button onclick="joinRoom()" class="px-5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg transition">Entrar</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 my-2">
+                        <div class="h-px bg-slate-800 flex-1"></div>
+                        <span class="text-xs text-slate-500 uppercase font-bold">ou</span>
+                        <div class="h-px bg-slate-800 flex-1"></div>
+                    </div>
+
+                    <button onclick="createRoom()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Criar Nova Sala Multiplayer
+                    </button>
+
+                    <div class="pt-2">
+                        <label class="block text-left text-xs text-slate-400 font-bold mb-2">Escolha seu Time:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="selectTeam('green')" id="btn-team-green" class="py-2 bg-emerald-950/60 border-2 border-emerald-500 text-emerald-400 font-bold text-xs rounded-lg">
+                                Time Verde (Esquerda)
+                            </button>
+                            <button onclick="selectTeam('red')" id="btn-team-red" class="py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg">
+                                Time Vermelho (Direita)
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <button onclick="closeLobbyModal()" class="mt-6 text-xs text-slate-500 hover:text-slate-300 font-bold">
+                    Jogar Solo / Contra Bots
+                </button>
             </div>
-
-            <button onclick="cancelMatchmaking()" class="px-6 py-2.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-bold text-sm rounded-lg transition">
-                Cancelar Busca
-            </button>
         </div>
 
         <!-- Overlay de Seleção / Loja de Veículos -->
-        <div id="vehicleSelectOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-4 sm:p-6 z-30">
+        <div id="vehicleSelectOverlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-4 sm:p-6 z-30">
             <div class="flex items-center justify-between w-full max-w-4xl mb-4">
                 <div>
                     <h2 class="text-2xl md:text-3xl font-black text-emerald-400 tracking-wide">GARAGEM MILITAR</h2>
@@ -284,20 +313,27 @@
             </div>
 
             <button onclick="startGameWithVehicle()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 font-extrabold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 text-lg uppercase tracking-wider">
-                PROCURAR PARTIDA <i class="fa-solid fa-magnifying-glass ml-2 text-sm"></i>
+                Ir Para Batalha <i class="fa-solid fa-play ml-2 text-sm"></i>
             </button>
         </div>
 
-        <!-- Overlay de Fim de Jogo com Recompensas -->
+        <!-- Overlay de Fim de Jogo com Recompensas e CS2 Rating -->
         <div id="gameOverOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 z-20">
             <h2 id="winnerText" class="text-4xl font-extrabold mb-1 tracking-wide">TIME VERDE VENCEU!</h2>
             <p id="winnerSubtext" class="text-slate-400 mb-4">Todos os veículos inimigos foram destruídos.</p>
             
             <div id="rewards-panel" class="bg-slate-900 border border-slate-800 rounded-xl p-4 w-full max-w-sm mb-6 space-y-2 text-sm">
-                <div class="flex justify-between text-slate-300">
-                    <span>Resultado do Rating (CS):</span>
-                    <span id="reward-rating-change" class="font-black text-emerald-400">+220 PTS</span>
+                <!-- Painel CS Rating Ajustado -->
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800 mb-2">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Novo CS Rating:</span>
+                        <span id="cs-rating-change" class="text-base font-black text-emerald-400">+125 CS</span>
+                    </div>
+                    <div class="text-right">
+                        <span id="match-rank-badge" class="text-xs px-2 py-0.5 rounded font-black rank-badge-silver">1.125 CS</span>
+                    </div>
                 </div>
+
                 <div class="flex justify-between text-slate-300">
                     <span>Abates (<span id="reward-kills-count">0</span>):</span>
                     <span id="reward-kills-money" class="text-amber-400 font-bold">+$0</span>
@@ -320,315 +356,285 @@
                 <button onclick="showVehicleSelection()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 font-bold text-slate-200 rounded-lg transition border border-slate-700">
                     Garagem / Loja
                 </button>
-                <button onclick="startMatchmaking()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
-                    Buscar Nova Partida
+                <button onclick="restartGame()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-lg shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
+                    Jogar Novamente
                 </button>
             </div>
         </div>
     </main>
 
-    <!-- FIREBASE INITIALIZATION & MULTIPLAYER MATCHMAKING LOGIC -->
+    <!-- Dicas e Controles -->
+    <footer class="w-full max-w-5xl mt-3 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-2 bg-slate-900/40 p-3 rounded-lg border border-slate-800/60">
+        <div class="flex flex-wrap items-center gap-4">
+            <span><strong class="text-slate-200">WASD / Setas:</strong> Mover</span>
+            <span><strong class="text-slate-200">Espaço / Botão Esq:</strong> Atirar</span>
+            <span><strong class="text-slate-200">Tecla E / Botão Dir:</strong> Especial (Libera em 1min)</span>
+        </div>
+        <div class="text-slate-500">
+            Recompensas: $1.000/Abate | $10.000/Vitória | CS Rating CS2
+        </div>
+    </footer>
+
+    <!-- Controles Mobile Touches -->
+    <div class="md:hidden fixed bottom-4 right-4 flex gap-2 z-10">
+        <button id="btn-special" class="w-14 h-14 bg-sky-600/80 active:bg-sky-500 text-white rounded-full flex items-center justify-center text-lg shadow-lg border border-sky-400/40">
+            <i class="fa-solid fa-bolt"></i>
+        </button>
+        <button id="btn-fire" class="w-16 h-16 bg-rose-600/80 active:bg-rose-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border border-rose-400/40">
+            <i class="fa-solid fa-crosshairs"></i>
+        </button>
+    </div>
+
+    <!-- SCRIPT DE FIREBASE, LOGIN & SISTEMA CS2 RANKING -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLZ-lOJ9V750N_hFPEFBWEwd0xXVzGKSs",
-            authDomain: "nord-dba5d.firebaseapp.com",
-            databaseURL: "https://nord-dba5d-default-rtdb.firebaseio.com",
-            projectId: "nord-dba5d",
-            storageBucket: "nord-dba5d.firebasestorage.app",
-            messagingSenderId: "473231525493",
-            appId: "1:473231525493:web:2def50deed039d6eea5a3c"
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'armored-clash-v1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo", storageBucket: "demo.appspot.com"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'armored-clash-cs';
-        let currentUserData = null;
         let currentUserId = null;
-
-        let currentRoomId = null;
+        let roomCode = null;
+        let selectedTeam = 'green';
         let roomUnsubscribe = null;
-        let isHost = false;
         let lastSyncTime = 0;
 
+        // ESTADO DE PROFILE & RANK TIPO CS2
+        window.playerProfile = {
+            nickname: 'Comandante',
+            csRating: 1000,
+            wins: 0,
+            losses: 0,
+            kills: 0
+        };
+
+        // Autenticação Silenciosa
         async function initAuth() {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Auth Fallback Local:", err);
             }
-            currentUserId = auth.currentUser ? auth.currentUser.uid : crypto.randomUUID();
         }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                await loadPlayerProfileFromCloud();
+            } else {
+                currentUserId = 'user_' + Math.random().toString(36).substr(2, 6);
+            }
+        });
+
         initAuth();
 
-        window.handleLogin = async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            const errorDiv = document.getElementById('loginError');
-
-            if (!username || !password) return;
-
-            errorDiv.classList.add('hidden');
-            const submitBtn = document.getElementById('loginSubmitBtn');
-            submitBtn.innerText = "Conectando...";
-            submitBtn.disabled = true;
-
+        // PERSISTÊNCIA DE PERFIL NO FIRESTORE
+        async function loadPlayerProfileFromCloud() {
+            if (!currentUserId) return;
             try {
-                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', username.toLowerCase());
-                const userSnap = await getDoc(userDocRef);
-
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    if (data.password === password) {
-                        currentUserData = data;
-                    } else {
-                        errorDiv.innerText = "Senha incorreta para este Nick!";
-                        errorDiv.classList.remove('hidden');
-                        submitBtn.innerText = "Entrar na Arena";
-                        submitBtn.disabled = false;
-                        return;
-                    }
-                } else {
-                    currentUserData = {
-                        username: username,
-                        password: password,
-                        rating: 1000,
-                        money: 1500,
-                        unlockedVehicles: ['humvee'],
-                        uid: currentUserId
-                    };
-                    await setDoc(userDocRef, currentUserData);
+                const userDocRef = doc(db, 'artifacts', appId, 'users', currentUserId, 'profile', 'data');
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    window.playerProfile = { ...window.playerProfile, ...docSnap.data() };
                 }
-
-                window.playerMoney = currentUserData.money;
-                window.unlockedVehicles = currentUserData.unlockedVehicles || ['humvee'];
-                document.getElementById('player-username').innerText = currentUserData.username;
-                document.getElementById('player-rating').innerText = `${currentUserData.rating.toLocaleString()} PTS`;
-                
-                document.getElementById('loginOverlay').classList.add('hidden');
-                window.updateMoneyUI();
-            } catch (err) {
-                console.error(err);
-                errorDiv.innerText = "Erro ao autenticar. Tente novamente!";
-                errorDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.innerText = "Entrar na Arena";
-                submitBtn.disabled = false;
-            }
-        };
-
-        window.saveUserData = async function(ratingDelta, moneyDelta) {
-            if (!currentUserData) return;
-            currentUserData.rating = Math.max(0, currentUserData.rating + ratingDelta);
-            currentUserData.money = Math.max(0, currentUserData.money + moneyDelta);
-            currentUserData.unlockedVehicles = window.unlockedVehicles;
-
-            document.getElementById('player-rating').innerText = `${currentUserData.rating.toLocaleString()} PTS`;
-
-            try {
-                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUserData.username.toLowerCase());
-                await updateDoc(userDocRef, {
-                    rating: currentUserData.rating,
-                    money: currentUserData.money,
-                    unlockedVehicles: currentUserData.unlockedVehicles
-                });
-            } catch(e) {
-                console.error("Erro ao salvar progresso:", e);
-            }
-        };
-
-        window.toggleLeaderboard = async function(show) {
-            const modal = document.getElementById('leaderboardOverlay');
-            if (show) {
-                modal.classList.remove('hidden');
-                const list = document.getElementById('leaderboardList');
-                list.innerHTML = `<div class="text-center py-6 text-slate-400 font-bold">Carregando Leaderboard...</div>`;
-
-                try {
-                    const querySnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
-                    const users = [];
-                    querySnap.forEach(d => users.push(d.data()));
-                    users.sort((a, b) => b.rating - a.rating);
-
-                    list.innerHTML = users.map((u, i) => `
-                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 text-center font-black ${i === 0 ? 'text-amber-400 text-base' : (i===1?'text-slate-300':(i===2?'text-amber-600':'text-slate-500'))}">#${i+1}</span>
-                                <span class="font-bold text-sm text-white">${u.username}</span>
-                            </div>
-                            <span class="px-2.5 py-1 rounded text-xs font-black text-slate-950 cs-rating-badge">${(u.rating||1000).toLocaleString()} PTS</span>
-                        </div>
-                    `).join('');
-                } catch(err) {
-                    list.innerHTML = `<div class="text-center py-6 text-rose-500 font-bold">Erro ao carregar lista.</div>`;
-                }
-            } else {
-                modal.classList.add('hidden');
-            }
-        };
-
-        // --- SISTEMA DE MATCHMAKING EM TEMPO REAL NO FIRESTORE ---
-        window.startMatchmaking = async function() {
-            if (!currentUserData) return;
-
-            const mode = window.selectedMode || 1;
-            const requiredCount = mode * 2; // 1x1 = 2 players, 2x2 = 4, 3x3 = 6, 4x4 = 8, 5x5 = 10
-
-            document.getElementById('matchmakingOverlay').classList.remove('hidden');
-            document.getElementById('queue-mode-text').innerText = `Modo: ${mode} x ${mode} (Necessário ${requiredCount} Jogadores)`;
-            document.getElementById('required-count').innerText = requiredCount;
-            document.getElementById('connected-count').innerText = "1";
-
-            try {
-                const roomsSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'));
-                let foundRoom = null;
-
-                roomsSnap.forEach(docSnap => {
-                    const roomData = docSnap.data();
-                    if (roomData.mode === mode && roomData.status === 'waiting' && roomData.players.length < requiredCount) {
-                        foundRoom = { id: docSnap.id, ...roomData };
-                    }
-                });
-
-                const myPlayerData = {
-                    id: currentUserId,
-                    username: currentUserData.username,
-                    vehicleType: window.selectedVehicleType,
-                    x: 100, y: 250, angle: 0, hp: 100, alive: true,
-                    lastUpdate: Date.now()
-                };
-
-                if (foundRoom) {
-                    currentRoomId = foundRoom.id;
-                    isHost = false;
-                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                    
-                    foundRoom.players.push(myPlayerData);
-                    await updateDoc(roomRef, {
-                        players: foundRoom.players
-                    });
-                } else {
-                    currentRoomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-                    isHost = true;
-                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                    
-                    await setDoc(roomRef, {
-                        mode: mode,
-                        requiredCount: requiredCount,
-                        status: 'waiting',
-                        players: [myPlayerData],
-                        created: Date.now()
-                    });
-                }
-
-                listenToRoom(currentRoomId, requiredCount);
-
+                updateCS2RankUI();
             } catch (e) {
-                console.error("Erro no matchmaking:", e);
-                window.cancelMatchmaking();
+                console.warn("Erro ao carregar perfil:", e);
             }
-        };
-
-        function listenToRoom(roomId, requiredCount) {
-            if (roomUnsubscribe) roomUnsubscribe();
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
-            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
-                if (!snapshot.exists()) return;
-                const roomData = snapshot.data();
-
-                document.getElementById('connected-count').innerText = roomData.players.length;
-                
-                const list = document.getElementById('lobby-players-list');
-                list.innerHTML = roomData.players.map(p => `
-                    <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded font-bold text-amber-400">
-                        <i class="fa-solid fa-user mr-1 text-[10px]"></i>${p.username}
-                    </span>
-                `).join('');
-
-                if (roomData.players.length >= requiredCount && roomData.status === 'waiting') {
-                    if (isHost) {
-                        updateDoc(roomRef, { status: 'playing' });
-                    }
-                }
-
-                if (roomData.status === 'playing') {
-                    document.getElementById('matchmakingOverlay').classList.add('hidden');
-                    window.startOnlineMatch(roomData);
-                    // Atualizar posições dos outros jogadores na partida
-                    window.updateRemotePlayers(roomData.players);
-                }
-            }, (error) => {
-                console.error("Erro ao escutar sala:", error);
-            });
         }
 
-        window.cancelMatchmaking = async function() {
-            if (roomUnsubscribe) roomUnsubscribe();
-            if (currentRoomId) {
-                try {
-                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                    const roomSnap = await getDoc(roomRef);
-                    if (roomSnap.exists()) {
-                        const data = roomSnap.data();
-                        const updatedPlayers = data.players.filter(p => p.id !== currentUserId);
-                        if (updatedPlayers.length === 0) {
-                            await deleteDoc(roomRef);
-                        } else {
-                            await updateDoc(roomRef, { players: updatedPlayers });
-                        }
-                    }
-                } catch(e) {}
+        window.saveProfileToCloud = async () => {
+            if (!currentUserId) return;
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'users', currentUserId, 'profile', 'data');
+                await setDoc(userDocRef, window.playerProfile, { merge: true });
+            } catch (e) {
+                console.error("Erro ao salvar perfil:", e);
             }
-            currentRoomId = null;
-            document.getElementById('matchmakingOverlay').classList.add('hidden');
         };
 
-        // ENVIAR POSIÇÃO ATUAL EM TEMPO REAL VIA FIRESTORE
-        window.syncMyPosition = async function(vehicleData) {
-            if (!currentRoomId) return;
+        // SISTEMA DE CALCULO DE PATENTES DO CS2 (CS RATING)
+        window.getRankDetails = (rating) => {
+            if (rating >= 20000) return { title: 'Global Elite', style: 'rank-badge-global', icon: 'fa-trophy' };
+            if (rating >= 15000) return { title: 'Mestre Supremo', style: 'rank-badge-master', icon: 'fa-crown' };
+            if (rating >= 12000) return { title: 'Mestre I', style: 'rank-badge-master', icon: 'fa-award' };
+            if (rating >= 9000) return { title: 'Ouro Mestre', style: 'rank-badge-gold', icon: 'fa-medal' };
+            if (rating >= 5000) return { title: 'Ouro I', style: 'rank-badge-gold', icon: 'fa-star' };
+            if (rating >= 2500) return { title: 'Prata Mestre', style: 'rank-badge-silver', icon: 'fa-shield' };
+            return { title: 'Prata I', style: 'rank-badge-silver', icon: 'fa-shield-halved' };
+        };
+
+        function updateCS2RankUI() {
+            const profile = window.playerProfile;
+            const rank = window.getRankDetails(profile.csRating);
+
+            document.getElementById('player-nickname').innerText = profile.nickname;
+            document.getElementById('player-rank-title').innerText = rank.title;
+            
+            const badge = document.getElementById('player-rank-badge');
+            badge.innerText = `${profile.csRating.toLocaleString()} CS`;
+            badge.className = `text-[9px] px-1.5 py-0.2 rounded font-black ${rank.style}`;
+
+            const iconContainer = document.getElementById('rank-icon-container');
+            iconContainer.innerHTML = `<i class="fa-solid ${rank.icon} text-sm"></i>`;
+        }
+
+        window.openAuthModal = () => {
+            document.getElementById('auth-nickname').value = window.playerProfile.nickname;
+            document.getElementById('authModal').classList.remove('hidden');
+        };
+
+        window.closeAuthModal = () => {
+            document.getElementById('authModal').classList.add('hidden');
+        };
+
+        window.savePlayerProfile = () => {
+            const nick = document.getElementById('auth-nickname').value.trim();
+            if (nick) {
+                window.playerProfile.nickname = nick;
+                updateCS2RankUI();
+                window.saveProfileToCloud();
+            }
+            closeAuthModal();
+        };
+
+        // FUNÇÕES MULTIPLAYER DE SALAS
+        window.selectTeam = (team) => {
+            selectedTeam = team;
+            const btnGreen = document.getElementById('btn-team-green');
+            const btnRed = document.getElementById('btn-team-red');
+
+            if (team === 'green') {
+                btnGreen.className = "py-2 bg-emerald-950/60 border-2 border-emerald-500 text-emerald-400 font-bold text-xs rounded-lg";
+                btnRed.className = "py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg";
+            } else {
+                btnRed.className = "py-2 bg-rose-950/60 border-2 border-rose-500 text-rose-400 font-bold text-xs rounded-lg";
+                btnGreen.className = "py-2 bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs rounded-lg";
+            }
+        };
+
+        window.openLobbyModal = () => {
+            document.getElementById('lobbyOverlay').classList.remove('hidden');
+        };
+
+        window.closeLobbyModal = () => {
+            document.getElementById('lobbyOverlay').classList.add('hidden');
+        };
+
+        window.createRoom = () => {
+            const code = Math.floor(1000 + Math.random() * 9000).toString();
+            document.getElementById('room-input').value = code;
+            joinRoomWithCode(code);
+        };
+
+        window.joinRoom = () => {
+            const input = document.getElementById('room-input').value.trim().toUpperCase();
+            if (!input) return;
+            joinRoomWithCode(input);
+        };
+
+        async function joinRoomWithCode(code) {
+            roomCode = code;
+            document.getElementById('current-room-code').innerText = roomCode;
+            document.getElementById('lobbyOverlay').classList.add('hidden');
+
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+
+            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data();
+
+                if (data.players) {
+                    Object.keys(data.players).forEach(uid => {
+                        if (uid !== currentUserId) {
+                            const pData = data.players[uid];
+                            let remoteVehicle = window.vehicles.find(v => v.userId === uid);
+
+                            if (!remoteVehicle) {
+                                remoteVehicle = new window.Vehicle(pData.x, pData.y, pData.team, pData.type, false);
+                                remoteVehicle.userId = uid;
+                                window.vehicles.push(remoteVehicle);
+                            }
+
+                            remoteVehicle.x = pData.x;
+                            remoteVehicle.y = pData.y;
+                            remoteVehicle.angle = pData.angle;
+                            remoteVehicle.hp = pData.hp;
+                            remoteVehicle.alive = pData.alive;
+                            remoteVehicle.shieldTime = pData.shieldTime || 0;
+                        }
+                    });
+                }
+            }, (error) => console.log("Erro no Snapshot:", error));
+
+            window.restartGame();
+        }
+
+        window.syncPlayerToCloud = async () => {
+            if (!roomCode || !currentUserId || !window.player) return;
+
             const now = Date.now();
-            if (now - lastSyncTime < 80) return; // Limitar taxa para 12 FPS de sync
+            if (now - lastSyncTime < 80) return;
             lastSyncTime = now;
 
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+
             try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                const roomSnap = await getDoc(roomRef);
-                if (roomSnap.exists()) {
-                    const players = roomSnap.data().players;
-                    const myIdx = players.findIndex(p => p.id === currentUserId);
-                    if (myIdx !== -1) {
-                        players[myIdx] = { ...players[myIdx], ...vehicleData, lastUpdate: now };
-                        await updateDoc(roomRef, { players: players });
+                await setDoc(roomRef, {
+                    players: {
+                        [currentUserId]: {
+                            x: Math.round(window.player.x),
+                            y: Math.round(window.player.y),
+                            angle: Number(window.player.angle.toFixed(2)),
+                            type: window.player.type,
+                            team: selectedTeam,
+                            hp: Math.round(window.player.hp),
+                            alive: window.player.alive,
+                            shieldTime: window.player.shieldTime,
+                            lastSeen: Date.now()
+                        }
                     }
-                }
-            } catch(e) {}
+                }, { merge: true });
+            } catch (e) {
+                console.error("Erro na Sincronização:", e);
+            }
         };
+
+        window.getCurrentTeam = () => selectedTeam;
+        window.updateCS2RankUI = updateCS2RankUI;
     </script>
 
     <script>
-        // --- CONFIGURAÇÃO E ESTADO GLOBAL DO JOGO ---
+        // --- CONFIGURAÇÃO E ESTADO GLOBAL ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         let selectedMode = 1; 
-        window.selectedMode = 1;
         let selectedVehicleType = 'humvee';
-        window.selectedVehicleType = 'humvee';
 
-        window.playerMoney = 1500;
-        const vehiclePrices = { humvee: 0, tank: 20000, helicopter: 80000, rocket: 200000, jet: 800000 };
-        window.unlockedVehicles = ['humvee'];
-
-        // SORTEIO CS2 RATING PER MATCH
-        let stakeWin = 220;
-        let stakeLoss = 170;
+        // ECONÔMICO & GARAGEM
+        let playerMoney = 1500;
+        const vehiclePrices = {
+            humvee: 0,
+            tank: 20000,
+            helicopter: 80000,
+            rocket: 200000,
+            jet: 800000
+        };
+        let unlockedVehicles = ['humvee'];
 
         let greenKills = 0;
         let redKills = 0;
@@ -651,181 +657,11 @@
             Space: false, KeyE: false
         };
 
-        // --- FUNÇÕES DE MENU EXPOSTAS GLOBALMENTE ---
-        window.selectVehicleType = function(type) {
-            const price = vehiclePrices[type];
-            if (!window.unlockedVehicles.includes(type)) {
-                if (window.playerMoney >= price) {
-                    window.playerMoney -= price;
-                    window.unlockedVehicles.push(type);
-                    if (window.saveUserData) window.saveUserData(0, 0);
-                    selectedVehicleType = type;
-                    window.selectedVehicleType = type;
-                } else {
-                    return;
-                }
-            } else {
-                selectedVehicleType = type;
-                window.selectedVehicleType = type;
-            }
-            
-            document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
-            const card = document.getElementById(`card-${type}`);
-            if (card) card.classList.add('selected');
-            updateMoneyUI();
-        };
-
-        window.showVehicleSelection = function() {
-            document.getElementById('vehicleSelectOverlay').classList.remove('hidden');
-            updateMoneyUI();
-        };
-
-        window.startGameWithVehicle = function() {
-            document.getElementById('vehicleSelectOverlay').classList.add('hidden');
-            if (window.startMatchmaking) window.startMatchmaking();
-        };
-
-        window.setGameMode = function(mode) {
-            selectedMode = mode;
-            window.selectedMode = mode;
-            for (let i = 1; i <= 5; i++) {
-                const btn = document.getElementById(`mode-${i}`);
-                if (btn) {
-                    if (i === mode) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
-            }
-        };
-
-        window.leaveQueueOrMatch = function() {
-            if (window.cancelMatchmaking) window.cancelMatchmaking();
-            document.getElementById('gameOverOverlay').classList.add('hidden');
-            window.showVehicleSelection();
-        };
-
-        function startMatchTimer() {
-            matchTimeSeconds = 0;
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                matchTimeSeconds++;
-            }, 1000);
-        }
-
-        window.startOnlineMatch = function(roomData) {
-            vehicles = [];
-            bullets = [];
-            particles = [];
-            targetMarkers = [];
-            fireZones = [];
-            greenKills = 0;
-            redKills = 0;
-
-            // Garantir dimensões do Canvas e obstáculos antes de spawnar
-            resizeCanvas();
-
-            const playersList = roomData.players || [];
-            const half = Math.ceil(playersList.length / 2);
-
-            playersList.forEach((pData, idx) => {
-                const isGreen = idx < half;
-                const team = isGreen ? 'green' : 'red';
-                const teamIdx = isGreen ? idx : (idx - half);
-                const countInTeam = isGreen ? half : Math.max(1, playersList.length - half);
-
-                const startX = isGreen ? 80 : (canvas.width - 80);
-                const startY = (canvas.height / (countInTeam + 1)) * (teamIdx + 1);
-
-                const currentMyNick = currentUserData ? currentUserData.username : '';
-                const isMe = pData.username === currentMyNick || pData.id === currentUserId;
-
-                const v = new Vehicle(startX, startY, team, pData.vehicleType || 'humvee', isMe, pData.username || 'Combatente');
-                vehicles.push(v);
-
-                if (isMe) player = v;
-            });
-
-            rollMatchStakes();
-            startMatchTimer();
-
-            // Reiniciar/Garantir o loop de renderização do Canvas
-            if (!window.gameLoopRunning) {
-                window.gameLoopRunning = true;
-                requestAnimationFrame(gameLoop);
-            }
-        };
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawArena();
-
-            bullets.forEach((b, idx) => {
-                b.update();
-                b.draw();
-                if (!b.active) bullets.splice(idx, 1);
-            });
-
-            particles.forEach((p, idx) => {
-                p.update();
-                p.draw();
-                if (p.life <= 0) particles.splice(idx, 1);
-            });
-
-            vehicles.forEach(v => {
-                v.update();
-                v.draw();
-            });
-
-            if (player && player.alive) {
-                ctx.save();
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-                ctx.fillRect(10, 10, 220, 36);
-                ctx.strokeStyle = '#334155';
-                ctx.strokeRect(10, 10, 220, 36);
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 12px Inter, sans-serif';
-                ctx.fillText(`HABILIDADE [E]:`, 18, 32);
-
-                if (matchTimeSeconds < 60) {
-                    const remain = 60 - matchTimeSeconds;
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillText(`BLOQUEADA (${remain}s)`, 125, 32);
-                } else if (player.specialCooldown > 0) {
-                    const cdSeconds = Math.ceil(player.specialCooldown / 60);
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.fillText(`RECARGA (${cdSeconds}s)`, 125, 32);
-                } else {
-                    ctx.fillStyle = '#22c55e';
-                    ctx.fillText(`PRONTA!`, 125, 32);
-                }
-                ctx.restore();
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Inicializar canvas e escutar resize
-        window.addEventListener('load', () => {
-            resizeCanvas();
-            if (!window.gameLoopRunning) {
-                window.gameLoopRunning = true;
-                requestAnimationFrame(gameLoop);
-            }
-        });
-
-        canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-        function rollMatchStakes() {
-            stakeWin = Math.floor(Math.random() * (320 - 100 + 1)) + 100;
-            stakeLoss = Math.floor(Math.random() * (280 - 100 + 1)) + 100;
-            document.getElementById('stake-win').innerText = `+${stakeWin}`;
-            document.getElementById('stake-loss').innerText = `-${stakeLoss}`;
-        }
+        window.vehicles = vehicles;
 
         function updateMoneyUI() {
-            document.getElementById('player-money').innerText = `$${window.playerMoney.toLocaleString()}`;
-            document.getElementById('shop-money').innerText = `$${window.playerMoney.toLocaleString()}`;
+            document.getElementById('player-money').innerText = `$${playerMoney.toLocaleString()}`;
+            document.getElementById('shop-money').innerText = `$${playerMoney.toLocaleString()}`;
             updateShopCardsUI();
         }
 
@@ -835,7 +671,7 @@
                 const btn = document.getElementById(`btn-buy-${t}`);
                 if (!btn) return;
 
-                if (window.unlockedVehicles.includes(t)) {
+                if (unlockedVehicles.includes(t)) {
                     if (selectedVehicleType === t) {
                         btn.innerText = "Selecionado";
                         btn.className = "w-full mt-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg cursor-default";
@@ -882,16 +718,19 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
+            // Desenhar Obstáculos
             obstacles.forEach(obs => {
                 ctx.fillStyle = '#334155';
                 ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
                 ctx.strokeStyle = '#0f172a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+
                 ctx.fillStyle = '#1e293b';
                 ctx.fillRect(obs.x + 4, obs.y + 4, obs.w - 8, obs.h - 8);
             });
 
+            // Atualizar e Desenhar Áreas de Fogo no Chão
             fireZones.forEach((fz, idx) => {
                 ctx.save();
                 ctx.beginPath();
@@ -928,6 +767,7 @@
                 if (fz.duration <= 0) fireZones.splice(idx, 1);
             });
 
+            // Marcadores de Alvo Aéreo
             targetMarkers.forEach((m, idx) => {
                 ctx.save();
                 ctx.strokeStyle = '#ef4444';
@@ -950,71 +790,105 @@
             });
         }
 
+        // --- CLASSE PARTÍCULA ---
         class Particle {
             constructor(x, y, vx, vy, color, size, life) {
                 this.x = x; this.y = y;
                 this.vx = vx; this.vy = vy;
-                this.color = color; this.size = size;
-                this.life = life; this.maxLife = life;
+                this.color = color;
+                this.size = size;
+                this.life = life;
+                this.maxLife = life;
             }
-            update() { this.x += this.vx; this.y += this.vy; this.life--; }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+            }
+
             draw() {
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
                 ctx.fillStyle = this.color;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             }
         }
 
+        // --- CLASSE VEÍCULO ---
         class Vehicle {
-            constructor(x, y, team, type = 'humvee', isPlayer = false, username = 'Player') {
-                this.x = x; this.y = y;
-                this.team = team; this.type = type; this.isPlayer = isPlayer;
-                this.username = username;
+            constructor(x, y, team, type = 'humvee', isPlayer = false) {
+                this.x = x;
+                this.y = y;
+                this.team = team;
+                this.type = type;
+                this.isPlayer = isPlayer;
                 this.angle = team === 'green' ? 0 : Math.PI;
-                this.speed = 0; this.alive = true;
-                this.cooldown = 0; this.specialCooldown = 0; this.shieldTime = 0;
+                this.speed = 0;
+                this.alive = true;
+                this.cooldown = 0;
+                this.specialCooldown = 0;
+                this.shieldTime = 0;
+                this.aiTarget = null;
+                this.aiTimer = 0;
+                this.patrolPoint = { x: x, y: y };
+
                 this.color = team === 'green' ? '#22c55e' : '#ef4444';
                 this.darkColor = team === 'green' ? '#14532d' : '#7f1d1d';
+
                 this.setupAttributes();
             }
 
             setupAttributes() {
                 this.isAir = false;
+
                 switch (this.type) {
                     case 'tank':
                         this.width = 54; this.height = 36;
                         this.maxHp = 240; this.hp = 240;
-                        this.maxSpeed = 2.4; this.turnSpeed = 0.05;
-                        this.fireRate = 55; this.damage = 65;
+                        this.maxSpeed = this.isPlayer ? 2.1 : 1.7;
+                        this.turnSpeed = 0.045;
+                        this.fireRate = 55;
+                        this.damage = 65;
                         break;
                     case 'helicopter':
                         this.width = 44; this.height = 24;
                         this.maxHp = 120; this.hp = 120;
-                        this.maxSpeed = 3.6; this.turnSpeed = 0.07;
-                        this.fireRate = 60; this.damage = 18;
-                        this.isAir = true; this.rotorAngle = 0;
+                        this.maxSpeed = this.isPlayer ? 3.4 : 2.9;
+                        this.turnSpeed = 0.065;
+                        this.fireRate = 60;
+                        this.damage = 18;
+                        this.isAir = true;
+                        this.rotorAngle = 0;
                         break;
                     case 'jet':
                         this.width = 50; this.height = 32;
                         this.maxHp = 110; this.hp = 110;
-                        this.maxSpeed = 4.8; this.turnSpeed = 0.075;
-                        this.fireRate = 40; this.damage = 75;
+                        this.maxSpeed = this.isPlayer ? 4.5 : 3.8;
+                        this.turnSpeed = 0.07;
+                        this.fireRate = 40;
+                        this.damage = 75;
                         this.isAir = true;
                         break;
                     case 'rocket':
                         this.width = 48; this.height = 30;
                         this.maxHp = 160; this.hp = 160;
-                        this.maxSpeed = 2.8; this.turnSpeed = 0.06;
-                        this.fireRate = 33; this.damage = 35;
+                        this.maxSpeed = this.isPlayer ? 2.6 : 2.2;
+                        this.turnSpeed = 0.055;
+                        this.fireRate = 33;
+                        this.damage = 35;
                         break;
                     case 'humvee':
                     default:
                         this.width = 44; this.height = 28;
                         this.maxHp = 100; this.hp = 100;
-                        this.maxSpeed = 3.2; this.turnSpeed = 0.06;
-                        this.fireRate = 20; this.damage = 20;
+                        this.maxSpeed = this.isPlayer ? 2.9 : 2.4;
+                        this.turnSpeed = 0.055;
+                        this.fireRate = 20;
+                        this.damage = 20;
                         break;
                 }
             }
@@ -1026,20 +900,15 @@
                 if (this.specialCooldown > 0) this.specialCooldown--;
                 if (this.shieldTime > 0) this.shieldTime--;
 
-                if (this.type === 'helicopter') this.rotorAngle += 0.45;
+                if (this.type === 'helicopter') {
+                    this.rotorAngle += 0.45;
+                }
 
                 if (this.isPlayer) {
                     this.handlePlayerInput();
-                    // Transmitir posição do jogador atual em tempo real para Firestore
-                    if (window.syncMyPosition) {
-                        window.syncMyPosition({
-                            x: this.x,
-                            y: this.y,
-                            angle: this.angle,
-                            hp: this.hp,
-                            alive: this.alive
-                        });
-                    }
+                    if (window.syncPlayerToCloud) window.syncPlayerToCloud();
+                } else if (!this.userId) {
+                    this.handleAI();
                 }
 
                 if (this.type === 'jet' && Math.abs(this.speed) < 2.0) {
@@ -1069,11 +938,81 @@
                 if (keys.a || keys.ArrowLeft) this.angle -= this.turnSpeed;
                 if (keys.d || keys.ArrowRight) this.angle += this.turnSpeed;
 
-                if (keys.w || keys.ArrowUp) this.speed = Math.min(this.speed + 0.3, this.maxSpeed);
-                if (keys.s || keys.ArrowDown) this.speed = Math.max(this.speed - 0.22, -this.maxSpeed * 0.5);
+                if (keys.w || keys.ArrowUp) this.speed = Math.min(this.speed + 0.28, this.maxSpeed);
+                if (keys.s || keys.ArrowDown) this.speed = Math.max(this.speed - 0.2, -this.maxSpeed * 0.5);
 
                 if (keys.Space) this.shoot();
                 if (keys.KeyE) this.useSpecial();
+            }
+
+            handleAI() {
+                this.aiTimer++;
+
+                if (this.aiTimer % 20 === 0 || !this.aiTarget || !this.aiTarget.alive) {
+                    this.aiTarget = this.getClosestEnemy();
+                }
+
+                if (this.aiTarget && this.aiTarget.alive) {
+                    const dx = this.aiTarget.x - this.x;
+                    const dy = this.aiTarget.y - this.y;
+                    const dist = Math.hypot(dx, dy);
+                    const targetAngle = Math.atan2(dy, dx);
+
+                    let angleDiff = targetAngle - this.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+
+                    if (angleDiff > 0.05) this.angle += this.turnSpeed * 0.85;
+                    else if (angleDiff < -0.05) this.angle -= this.turnSpeed * 0.85;
+
+                    if (dist > 160) {
+                        this.speed = Math.min(this.speed + 0.2, this.maxSpeed * 0.9);
+                    } else if (dist < 80) {
+                        this.speed = Math.max(this.speed - 0.1, -this.maxSpeed * 0.4);
+                    } else {
+                        this.speed *= 0.9;
+                    }
+
+                    if (Math.abs(angleDiff) < 0.35 && dist < 420) {
+                        this.shoot();
+                    }
+
+                    if (matchTimeSeconds >= 60 && this.specialCooldown <= 0 && dist < 350) {
+                        this.useSpecial(this.aiTarget.x, this.aiTarget.y);
+                    }
+                } else {
+                    if (this.aiTimer % 120 === 0) {
+                        this.patrolPoint = {
+                            x: Math.random() * (canvas.width - 100) + 50,
+                            y: Math.random() * (canvas.height - 100) + 50
+                        };
+                    }
+                    const dx = this.patrolPoint.x - this.x;
+                    const dy = this.patrolPoint.y - this.y;
+                    const targetAngle = Math.atan2(dy, dx);
+                    let angleDiff = targetAngle - this.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    
+                    if (angleDiff > 0.1) this.angle += this.turnSpeed * 0.5;
+                    else if (angleDiff < -0.1) this.angle -= this.turnSpeed * 0.5;
+                    this.speed = Math.min(this.speed + 0.1, this.maxSpeed * 0.5);
+                }
+            }
+
+            getClosestEnemy() {
+                let closest = null;
+                let minDist = Infinity;
+                vehicles.forEach(v => {
+                    if (v.team !== this.team && v.alive) {
+                        const dist = Math.hypot(v.x - this.x, v.y - this.y);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closest = v;
+                        }
+                    }
+                });
+                return closest;
             }
 
             checkObstacleCollision(obs) {
@@ -1087,6 +1026,7 @@
 
             shoot() {
                 if (this.cooldown > 0 || !this.alive) return;
+
                 const turretLength = this.width / 2 + 4;
                 const frontX = this.x + Math.cos(this.angle) * turretLength;
                 const frontY = this.y + Math.sin(this.angle) * turretLength;
@@ -1094,20 +1034,25 @@
                 if (this.type === 'tank') {
                     bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'tank_missile', 320));
                     this.cooldown = this.fireRate;
+
                 } else if (this.type === 'helicopter') {
                     for (let i = 0; i < 5; i++) {
                         setTimeout(() => {
                             if (!this.alive) return;
                             const spread = (i - 2) * 0.07;
-                            bullets.push(new Bullet(this.x, this.y, this.angle + spread, this.team, this.damage, 'mg_bullet'));
+                            const fx = this.x + Math.cos(this.angle + spread) * turretLength;
+                            const fy = this.y + Math.sin(this.angle + spread) * turretLength;
+                            bullets.push(new Bullet(fx, fy, this.angle + spread, this.team, this.damage, 'mg_bullet'));
                         }, i * 50);
                     }
                     this.cooldown = this.fireRate;
+
                 } else if (this.type === 'jet') {
                     const launchX = this.x + Math.cos(this.angle) * 30;
                     const launchY = this.y + Math.sin(this.angle) * 30;
                     bullets.push(new Bullet(launchX, launchY, this.angle, this.team, this.damage, 'gravity_bomb', 0, this.speed + 2));
                     this.cooldown = this.fireRate;
+
                 } else if (this.type === 'rocket') {
                     const sideOffset = 8;
                     const bX1 = this.x + Math.cos(this.angle) * turretLength + Math.cos(this.angle + Math.PI/2) * sideOffset;
@@ -1118,39 +1063,59 @@
                     bullets.push(new Bullet(bX1, bY1, this.angle, this.team, this.damage, 'rocket'));
                     bullets.push(new Bullet(bX2, bY2, this.angle, this.team, this.damage, 'rocket'));
                     this.cooldown = this.fireRate;
+
                 } else {
                     bullets.push(new Bullet(frontX, frontY, this.angle, this.team, this.damage, 'standard'));
                     this.cooldown = this.fireRate;
+                }
+
+                for(let i=0; i<4; i++) {
+                    particles.push(new Particle(
+                        frontX, frontY,
+                        (Math.random() - 0.5) * 1.5,
+                        (Math.random() - 0.5) * 1.5,
+                        '#94a3b8', Math.random() * 4 + 2, 15
+                    ));
                 }
             }
 
             useSpecial(targetX = null, targetY = null) {
                 if (matchTimeSeconds < 60 || this.specialCooldown > 0 || !this.alive) return;
+
                 this.specialCooldown = 600;
 
                 if (this.type === 'humvee') {
                     this.shieldTime = 300;
+
                 } else if (this.type === 'tank') {
                     for (let i = -2; i <= 2; i++) {
                         const spreadAngle = this.angle + (i * 0.15);
-                        bullets.push(new Bullet(this.x, this.y, spreadAngle, this.team, 50, 'tank_missile', 360));
+                        const fx = this.x + Math.cos(spreadAngle) * 25;
+                        const fy = this.y + Math.sin(spreadAngle) * 25;
+                        bullets.push(new Bullet(fx, fy, spreadAngle, this.team, 50, 'tank_missile', 360));
                     }
+
                 } else if (this.type === 'helicopter') {
-                    const enemy = vehicles.find(v => v.team !== this.team && v.alive);
+                    const enemy = this.getClosestEnemy();
                     bullets.push(new Bullet(this.x, this.y - 10, this.angle - 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
                     bullets.push(new Bullet(this.x, this.y + 10, this.angle + 0.2, this.team, 50, 'homing_missile', 0, 0, enemy));
+
                 } else if (this.type === 'jet') {
                     const tx = targetX !== null ? targetX : mousePos.x;
                     const ty = targetY !== null ? targetY : mousePos.y;
+
                     for (let i = 0; i < 5; i++) {
                         setTimeout(() => {
                             targetMarkers.push({
                                 x: tx + (Math.random() - 0.5) * 90,
                                 y: ty + (Math.random() - 0.5) * 90,
-                                radius: 45, timer: 40, team: this.team
+                                radius: 45,
+                                timer: 40,
+                                team: this.team
                             });
                         }, i * 140);
                     }
+
                 } else if (this.type === 'rocket') {
                     for (let i = 0; i < 5; i++) {
                         setTimeout(() => {
@@ -1170,13 +1135,26 @@
 
             takeDamage(amount) {
                 if (this.shieldTime > 0) return;
+
                 this.hp -= amount;
+                
+                if (Math.random() < 0.4) {
+                    particles.push(new Particle(
+                        this.x, this.y,
+                        (Math.random() - 0.5) * 3,
+                        (Math.random() - 0.5) * 3,
+                        '#f59e0b', Math.random() * 3 + 1, 15
+                    ));
+                }
+
                 if (this.hp <= 0 && this.alive) {
                     this.hp = 0;
                     this.alive = false;
                     this.explode();
+
                     if (this.team === 'green') redKills++;
                     else greenKills++;
+                    updatePlacard();
                     checkGameOver();
                 }
             }
@@ -1185,8 +1163,10 @@
                 for (let i = 0; i < 35; i++) {
                     const color = ['#ef4444', '#f97316', '#eab308', '#475569'][Math.floor(Math.random() * 4)];
                     particles.push(new Particle(
-                        this.x + (Math.random()-0.5)*20, this.y + (Math.random()-0.5)*20,
-                        (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6,
+                        this.x + (Math.random()-0.5)*20,
+                        this.y + (Math.random()-0.5)*20,
+                        (Math.random() - 0.5) * 6,
+                        (Math.random() - 0.5) * 6,
                         color, Math.random() * 6 + 3, 35
                     ));
                 }
@@ -1194,14 +1174,19 @@
 
             draw() {
                 if (!this.alive) return;
+
                 ctx.save();
                 ctx.translate(this.x, this.y);
 
                 if (this.shieldTime > 0) {
                     ctx.save();
-                    ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'; ctx.fill();
-                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 32, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                     ctx.restore();
                 }
 
@@ -1211,44 +1196,77 @@
                     ctx.save();
                     ctx.translate(-6, 12);
                     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                    ctx.beginPath(); ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
+                    ctx.fill();
                     ctx.restore();
                 }
 
                 if (this.type === 'tank') {
-                    ctx.fillStyle = '#0f172a'; ctx.fillRect(-22, -15, 44, 7); ctx.fillRect(-22, 8, 44, 7);
-                    ctx.fillStyle = this.color; ctx.fillRect(-20, -11, 40, 22);
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(-22, -15, 44, 7);
+                    ctx.fillRect(-22, 8, 44, 7);
+
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(-20, -11, 40, 22);
                     ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -11, 40, 22);
-                    ctx.fillStyle = this.darkColor; ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                    ctx.fillStyle = this.darkColor;
+                    ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
                     ctx.fillStyle = '#0f172a'; ctx.fillRect(5, -3.5, 24, 7);
+
                 } else if (this.type === 'helicopter') {
-                    ctx.fillStyle = this.color; ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
                     ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+
                     ctx.fillStyle = this.darkColor; ctx.fillRect(-24, -3, 12, 6);
                     ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(8, 0, 6, 0, Math.PI*2); ctx.fill();
-                    ctx.save(); ctx.rotate(this.rotorAngle); ctx.fillStyle = '#cbd5e1';
-                    ctx.fillRect(-28, -2, 56, 4); ctx.fillRect(-2, -28, 4, 56); ctx.restore();
+
+                    ctx.save();
+                    ctx.rotate(this.rotorAngle);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fillRect(-28, -2, 56, 4); ctx.fillRect(-2, -28, 4, 56);
+                    ctx.restore();
+
                 } else if (this.type === 'jet') {
-                    ctx.fillStyle = this.color; ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
                     ctx.moveTo(22, 0); ctx.lineTo(-6, -16); ctx.lineTo(-14, -14);
                     ctx.lineTo(-10, -5); ctx.lineTo(-20, -5); ctx.lineTo(-20, 5);
                     ctx.lineTo(-10, 5); ctx.lineTo(-14, 14); ctx.lineTo(-6, 16);
-                    ctx.closePath(); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+                    ctx.closePath(); ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+
                     ctx.fillStyle = '#38bdf8'; ctx.fillRect(4, -3, 10, 6);
+
                 } else if (this.type === 'rocket') {
-                    ctx.fillStyle = '#0f172a'; ctx.fillRect(-20, -14, 40, 5); ctx.fillRect(-20, 9, 40, 5);
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(-20, -14, 40, 5); ctx.fillRect(-20, 9, 40, 5);
+
                     ctx.fillStyle = this.color; ctx.fillRect(-20, -10, 38, 20);
                     ctx.strokeStyle = '#020617'; ctx.lineWidth = 2; ctx.strokeRect(-20, -10, 38, 20);
+
                     ctx.fillStyle = '#334155'; ctx.fillRect(-16, -8, 16, 16);
                     ctx.fillStyle = '#ef4444'; ctx.fillRect(0, -6, 6, 4); ctx.fillRect(0, 2, 6, 4);
+
                 } else {
                     ctx.fillStyle = '#0f172a';
-                    ctx.beginPath(); ctx.arc(12, 14, 5.5, 0, Math.PI * 2); ctx.arc(12, -14, 5.5, 0, Math.PI * 2);
-                    ctx.arc(-14, 14, 5.5, 0, Math.PI * 2); ctx.arc(-14, -14, 5.5, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = this.color; ctx.beginPath();
+                    ctx.beginPath();
+                    ctx.arc(12, 14, 5.5, 0, Math.PI * 2);
+                    ctx.arc(12, -14, 5.5, 0, Math.PI * 2);
+                    ctx.arc(-14, 14, 5.5, 0, Math.PI * 2);
+                    ctx.arc(-14, -14, 5.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
                     ctx.moveTo(-20, -12); ctx.lineTo(8, -12); ctx.lineTo(20, -6);
                     ctx.lineTo(20, 6); ctx.lineTo(8, 12); ctx.lineTo(-20, 12);
-                    ctx.closePath(); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+                    ctx.closePath(); ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = '#020617'; ctx.stroke();
+
                     ctx.fillStyle = '#1e293b'; ctx.fillRect(-6, -8, 12, 16);
                     ctx.fillStyle = this.darkColor; ctx.fillRect(-2, -5, 10, 10);
                     ctx.fillStyle = '#0f172a'; ctx.fillRect(8, -2, 16, 4);
@@ -1256,33 +1274,48 @@
 
                 ctx.restore();
 
-                // Desenhar Nick sobre o veículo
-                ctx.save();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 10px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.username, this.x, this.y - (this.isAir ? 42 : 34));
-                ctx.restore();
+                if (this.isPlayer) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 30, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#4ade80';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.restore();
+                }
 
                 const barWidth = 36;
                 const barHeight = 4;
                 const barX = this.x - barWidth / 2;
                 const barY = this.y - (this.isAir ? 36 : 28);
+
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
                 ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+
                 const hpPercent = Math.max(0, this.hp / this.maxHp);
                 ctx.fillStyle = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
                 ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
             }
         }
 
+        window.Vehicle = Vehicle;
+
+        // --- CLASSE MÍSSEIL / TIRO ---
         class Bullet {
             constructor(x, y, angle, team, damage = 25, type = 'standard', maxDist = 0, initialSpeed = 0, target = null) {
-                this.x = x; this.y = y; this.startX = x; this.startY = y;
-                this.angle = angle; this.team = team;
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.startY = y;
+                this.angle = angle;
+                this.team = team;
                 this.radius = type === 'tank_missile' ? 6 : (type === 'gravity_bomb' ? 8 : 3);
-                this.active = true; this.damage = damage; this.type = type;
-                this.maxDist = maxDist; this.target = target;
+                this.active = true;
+                this.damage = damage;
+                this.type = type;
+                this.maxDist = maxDist;
+                this.target = target;
 
                 if (type === 'gravity_bomb') {
                     this.vx = Math.cos(angle) * (initialSpeed * 0.95);
@@ -1295,15 +1328,21 @@
 
             update() {
                 if (!this.active) return;
+
                 if (this.type === 'gravity_bomb') {
-                    this.x += this.vx; this.y += this.vy;
-                    this.vx *= 0.97; this.vy *= 0.97; this.bombTimer--;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.97;
+                    this.vy *= 0.97;
+                    this.bombTimer--;
+
                     if (this.bombTimer <= 0) {
                         this.active = false;
                         this.createImpactEffect(45);
                         this.checkAreaDamage(75);
                         fireZones.push({ x: this.x, y: this.y, radius: 45, duration: 240 });
                     }
+
                 } else if (this.type === 'homing_missile') {
                     if (this.target && this.target.alive) {
                         const targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
@@ -1314,15 +1353,18 @@
                     }
                     this.x += Math.cos(this.angle) * this.speed;
                     this.y += Math.sin(this.angle) * this.speed;
+
                 } else if (this.type === 'bomb_detonate') {
                     this.active = false;
                     this.createImpactEffect(50);
                     this.checkAreaDamage(85);
                     fireZones.push({ x: this.x, y: this.y, radius: 50, duration: 240 });
                     return;
+
                 } else {
                     this.x += Math.cos(this.angle) * this.speed;
                     this.y += Math.sin(this.angle) * this.speed;
+
                     if (this.maxDist > 0) {
                         const distMoved = Math.hypot(this.x - this.startX, this.y - this.startY);
                         if (distMoved >= this.maxDist) {
@@ -1335,7 +1377,8 @@
                 }
 
                 if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-                    this.active = false; return;
+                    this.active = false;
+                    return;
                 }
 
                 if (this.type !== 'gravity_bomb') {
@@ -1369,7 +1412,9 @@
                 vehicles.forEach(v => {
                     if (v.alive && v.team !== this.team) {
                         const dist = Math.hypot(v.x - this.x, v.y - this.y);
-                        if (dist <= radius) v.takeDamage(this.damage * 0.7);
+                        if (dist <= radius) {
+                            v.takeDamage(this.damage * 0.7);
+                        }
                     }
                 });
             }
@@ -1378,7 +1423,8 @@
                 for (let i = 0; i < intensity; i++) {
                     particles.push(new Particle(
                         this.x, this.y,
-                        (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6,
+                        (Math.random() - 0.5) * 6,
+                        (Math.random() - 0.5) * 6,
                         ['#ef4444', '#f97316', '#fbbf24'][Math.floor(Math.random()*3)],
                         Math.random() * 6 + 2, 22
                     ));
@@ -1387,20 +1433,190 @@
 
             draw() {
                 if (!this.active) return;
+
                 ctx.save();
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
                 if (this.type === 'gravity_bomb') {
-                    ctx.fillStyle = '#020617'; ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+                    ctx.fillStyle = '#020617';
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2;
                     ctx.fill(); ctx.stroke();
                 } else {
-                    ctx.fillStyle = this.team === 'green' ? '#86efac' : '#fca5a5'; ctx.fill();
-                    ctx.beginPath(); ctx.moveTo(this.x, this.y);
+                    ctx.fillStyle = this.team === 'green' ? '#86efac' : '#fca5a5';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.x - Math.cos(this.angle) * 8, this.y - Math.sin(this.angle) * 8);
                     ctx.strokeStyle = this.team === 'green' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(248, 113, 113, 0.5)';
-                    ctx.lineWidth = 2; ctx.stroke();
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 }
                 ctx.restore();
             }
+        }
+
+        // --- CONTROLES DE MOUSE E TECLADO ---
+        window.addEventListener('keydown', e => {
+            if (keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) {
+                keys[e.key] = true;
+                keys[e.code] = true;
+                if (e.code === 'Space') e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) {
+                keys[e.key] = false;
+                keys[e.code] = false;
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mousePos.x = e.clientX - rect.left;
+            mousePos.y = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousedown', e => {
+            if (!player || !player.alive) return;
+            if (e.button === 0) {
+                player.shoot();
+            } else if (e.button === 2) {
+                e.preventDefault();
+                player.useSpecial(mousePos.x, mousePos.y);
+            }
+        });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        const btnFire = document.getElementById('btn-fire');
+        if (btnFire) {
+            btnFire.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (player && player.alive) player.shoot();
+            });
+        }
+
+        const btnSpecial = document.getElementById('btn-special');
+        if (btnSpecial) {
+            btnSpecial.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (player && player.alive) player.useSpecial();
+            });
+        }
+
+        // --- CRONÔMETRO DE PARTIDA ---
+        function startMatchTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            matchTimeSeconds = 0;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                matchTimeSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = String(Math.floor(matchTimeSeconds / 60)).padStart(2, '0');
+            const secs = String(matchTimeSeconds % 60).padStart(2, '0');
+            document.getElementById('game-timer').innerText = `${mins}:${secs}`;
+
+            const badge = document.getElementById('special-badge');
+            if (matchTimeSeconds >= 60) {
+                badge.innerText = "PRONTO!";
+                badge.className = "text-[9px] px-1 bg-emerald-500 text-slate-950 rounded font-black uppercase animate-pulse";
+            } else {
+                badge.innerText = "Bloq";
+                badge.className = "text-[9px] px-1 bg-slate-800 text-slate-500 rounded font-bold uppercase";
+            }
+        }
+
+        // --- SISTEMA DE COMPRA E GARAGEM ---
+        function selectVehicleType(type) {
+            if (unlockedVehicles.includes(type)) {
+                selectedVehicleType = type;
+                updateShopCardsUI();
+            } else {
+                const price = vehiclePrices[type];
+                if (playerMoney >= price) {
+                    playerMoney -= price;
+                    unlockedVehicles.push(type);
+                    selectedVehicleType = type;
+                    updateMoneyUI();
+                }
+            }
+        }
+
+        function showVehicleSelection() {
+            updateMoneyUI();
+            document.getElementById('vehicleSelectOverlay').classList.remove('hidden');
+        }
+
+        function startGameWithVehicle() {
+            document.getElementById('vehicleSelectOverlay').classList.add('hidden');
+            restartGame();
+        }
+
+        function setGameMode(count) {
+            selectedMode = count;
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`mode-${i}`);
+                if (btn) {
+                    if (i === count) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            }
+            restartGame();
+        }
+
+        function spawnTeams(count) {
+            vehicles.length = 0;
+            bullets.length = 0;
+            particles.length = 0;
+            targetMarkers.length = 0;
+            fireZones.length = 0;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 60;
+            const stepY = (h - padding * 2) / Math.max(1, count - 1);
+
+            const vehicleTypesList = ['humvee', 'tank', 'helicopter', 'jet', 'rocket'];
+            const myTeam = window.getCurrentTeam ? window.getCurrentTeam() : 'green';
+
+            // Time Verde
+            for (let i = 0; i < count; i++) {
+                const x = padding + Math.random() * 30;
+                const y = count === 1 ? h / 2 : padding + i * stepY;
+                const isPlayer = (myTeam === 'green' && i === 0);
+                
+                const type = isPlayer ? selectedVehicleType : vehicleTypesList[i % vehicleTypesList.length];
+
+                const v = new Vehicle(x, y, 'green', type, isPlayer);
+                vehicles.push(v);
+                if (isPlayer) player = v;
+            }
+
+            // Time Vermelho
+            for (let i = 0; i < count; i++) {
+                const x = w - padding - Math.random() * 30;
+                const y = count === 1 ? h / 2 : padding + i * stepY;
+                const isPlayer = (myTeam === 'red' && i === 0);
+                const type = isPlayer ? selectedVehicleType : vehicleTypesList[(i + 1) % vehicleTypesList.length];
+
+                const v = new Vehicle(x, y, 'red', type, isPlayer);
+                vehicles.push(v);
+                if (isPlayer) player = v;
+            }
+        }
+
+        function updatePlacard() {
+            document.getElementById('score-green').innerText = greenKills;
+            document.getElementById('score-red').innerText = redKills;
         }
 
         function checkGameOver() {
@@ -1419,28 +1635,42 @@
                 const participationMoney = 500;
                 const totalEarned = killsMoney + winMoney + participationMoney;
 
-                const ratingDelta = greenAlive > 0 ? stakeWin : -stakeLoss;
+                playerMoney += totalEarned;
+                updateMoneyUI();
 
-                if (window.saveUserData) {
-                    window.saveUserData(ratingDelta, totalEarned);
-                } else {
-                    window.playerMoney += totalEarned;
-                    updateMoneyUI();
+                // CÁLCULO COMPETITIVO CS RATING (CS2 ELO SYSTEM)
+                const isWinner = greenAlive > 0;
+                const csRatingDelta = isWinner ? (100 + greenKills * 25) : (-75 + greenKills * 15);
+                
+                if (window.playerProfile) {
+                    window.playerProfile.csRating = Math.max(0, window.playerProfile.csRating + csRatingDelta);
+                    if (isWinner) window.playerProfile.wins++;
+                    else window.playerProfile.losses++;
+                    window.playerProfile.kills += greenKills;
+
+                    if (window.saveProfileToCloud) window.saveProfileToCloud();
+                    if (window.updateCS2RankUI) window.updateCS2RankUI();
                 }
+
+                // UI Fim de Jogo com Mudança de Rank
+                const csChangeEl = document.getElementById('cs-rating-change');
+                if (csRatingDelta >= 0) {
+                    csChangeEl.innerText = `+${csRatingDelta} CS`;
+                    csChangeEl.className = "text-base font-black text-emerald-400";
+                } else {
+                    csChangeEl.innerText = `${csRatingDelta} CS`;
+                    csChangeEl.className = "text-base font-black text-rose-500";
+                }
+
+                const rankDetails = window.getRankDetails ? window.getRankDetails(window.playerProfile.csRating) : { title: 'Prata', style: 'rank-badge-silver' };
+                const matchRankBadge = document.getElementById('match-rank-badge');
+                matchRankBadge.innerText = `${window.playerProfile.csRating.toLocaleString()} CS (${rankDetails.title})`;
+                matchRankBadge.className = `text-xs px-2 py-0.5 rounded font-black ${rankDetails.style}`;
 
                 document.getElementById('reward-kills-count').innerText = greenKills;
                 document.getElementById('reward-kills-money').innerText = `+$${killsMoney.toLocaleString()}`;
                 document.getElementById('reward-win-money').innerText = `+$${winMoney.toLocaleString()}`;
                 document.getElementById('reward-total').innerText = `+$${totalEarned.toLocaleString()}`;
-
-                const ratingChangeElem = document.getElementById('reward-rating-change');
-                if (greenAlive > 0) {
-                    ratingChangeElem.innerText = `+${stakeWin} PTS`;
-                    ratingChangeElem.className = "font-black text-emerald-400";
-                } else {
-                    ratingChangeElem.innerText = `-${stakeLoss} PTS`;
-                    ratingChangeElem.className = "font-black text-rose-500";
-                }
                 
                 const winRow = document.getElementById('reward-win-row');
                 if (greenAlive > 0) winRow.classList.remove('hidden');
@@ -1460,17 +1690,49 @@
             }
         }
 
-        window.updateRemotePlayers = function(playersList) {
-            playersList.forEach(pData => {
-                const remoteVeh = vehicles.find(v => v.username === pData.username);
-                if (remoteVeh && !remoteVeh.isPlayer) {
-                    remoteVeh.x = pData.x;
-                    remoteVeh.y = pData.y;
-                    remoteVeh.angle = pData.angle;
-                    remoteVeh.hp = pData.hp;
-                    remoteVeh.alive = pData.alive;
-                }
+        function restartGame() {
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            greenKills = 0;
+            redKills = 0;
+            updatePlacard();
+            startMatchTimer();
+            spawnTeams(selectedMode);
+        }
+
+        window.restartGame = restartGame;
+
+        // --- LOOP PRINCIPAL ---
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawArena();
+
+            vehicles.forEach(v => {
+                v.update();
+                v.draw();
             });
+
+            bullets.forEach((b, index) => {
+                b.update();
+                b.draw();
+                if (!b.active) bullets.splice(index, 1);
+            });
+
+            particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            resizeCanvas();
+            updateMoneyUI();
+            restartGame();
+            requestAnimationFrame(gameLoop);
         };
     </script>
 </body>
